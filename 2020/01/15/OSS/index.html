@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"laoshiren1207.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="进入到微服务开发，对于小型企业或者独立开发者来说，最大的问题就是内存和硬盘问题，所以我自己的服务不可能将文件存储在自己的服务器上。那么如何存储我们的文件？ 阿里云OSS对象存储 阿里云对象存储服务（Object Storage Service，简称 OSS）为您提供基于网络的数据存取服务。使用 OSS，您可以通过网络随时存储和调用包括文本、图片、音频和视频等在内的各种非结构化数据文件。 阿里云 O">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OSS对象存储服务">
+<meta property="og:url" content="https://laoshiren1207.github.io/2020/01/15/OSS/index.html">
+<meta property="og:site_name" content="LaoShiRen1207">
+<meta property="og:description" content="进入到微服务开发，对于小型企业或者独立开发者来说，最大的问题就是内存和硬盘问题，所以我自己的服务不可能将文件存储在自己的服务器上。那么如何存储我们的文件？ 阿里云OSS对象存储 阿里云对象存储服务（Object Storage Service，简称 OSS）为您提供基于网络的数据存取服务。使用 OSS，您可以通过网络随时存储和调用包括文本、图片、音频和视频等在内的各种非结构化数据文件。 阿里云 O">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115140605913.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115141428367.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115141522460.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020011514180773.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115142032487.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115142908599.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115144211244.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115144239292.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115144457513.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115144620330.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115145730824.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115145930995.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115152313829.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115152739917.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115152822643.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200115152950174.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="article:published_time" content="2020-01-15T07:31:21.000Z">
+<meta property="article:modified_time" content="2022-04-13T06:46:27.623Z">
+<meta property="article:author" content="Laoshiren">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="SpringBoot">
+<meta property="article:tag" content="oss">
+<meta property="article:tag" content="aliyun">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200115140605913.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70">
+
+<link rel="canonical" href="https://laoshiren1207.github.io/2020/01/15/OSS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>OSS对象存储服务 | LaoShiRen1207</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">LaoShiRen1207</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天下有太多难学的技术</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://laoshiren1207.github.io/2020/01/15/OSS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Laoshiren">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LaoShiRen1207">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OSS对象存储服务
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-15 15:31:21" itemprop="dateCreated datePublished" datetime="2020-01-15T15:31:21+08:00">2020-01-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-13 14:46:27" itemprop="dateModified" datetime="2022-04-13T14:46:27+08:00">2022-04-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>进入到微服务开发，对于小型企业或者独立开发者来说，最大的问题就是内存和硬盘问题，所以我自己的服务不可能将文件存储在自己的服务器上。那么如何存储我们的文件？</p>
+<h2 id="阿里云OSS对象存储"><a href="#阿里云OSS对象存储" class="headerlink" title="阿里云OSS对象存储"></a>阿里云OSS对象存储</h2><hr>
+<p>阿里云对象存储服务（Object Storage Service，简称 OSS）为您提供基于网络的数据存取服务。使用 OSS，您可以通过网络随时存储和调用包括文本、图片、音频和视频等在内的各种非结构化数据文件。</p>
+<p>阿里云 OSS 将数据文件以对象（Object）的形式上传到存储空间（Bucket）中。您可以进行以下操作：</p>
+<ol>
+<li>创建一个或者多个存储空间，向每个存储空间中添加一个或多个文件。</li>
+<li>通过获取已上传文件的地址进行文件的分享和下载。</li>
+<li>通过修改存储空间或文件的读写权限（ACL）来设置访问权限。</li>
+<li>通过阿里云管理控制台、各种便捷工具以及丰富的 SDK 包执行基本和高级 OSS 操作。</li>
+</ol>
+<p>OSS 提供多种语言的  和 SDK 包，方便您快速进行二次开发。详情请参见：<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/32011.html?spm=5176.8465980.0.0.4e701450vC329d&_from=help_widget_detail">Java SDK 快速入门</a></p>
+<h2 id="为什么使用阿里云OSS"><a href="#为什么使用阿里云OSS" class="headerlink" title="为什么使用阿里云OSS"></a>为什么使用阿里云OSS</h2><hr>
+<ol>
+<li>阿里云对象存储<code>OSS</code>，是阿里云提供的海量、安全、低成本、高可靠的云存储服务。<blockquote>
+<p>1.1 方便、快捷的使用方式</p>
+</blockquote>
+</li>
+</ol>
+<p>1.1.1 提供标准的RESTful API接口、丰富的SDK包、客户端工具、控制台。您可以像使用文件一样方便地上传、下载、检索、管理用于Web网站或者移动应用的海量数据。<br>1.1.2 不限文件数量和大小。您可以根据所需存储量无限扩展存储空间，解决了传统硬件存储扩容问题。<br>1.1.3 支持流式写入和读出。特别适合视频等大文件的边写边读业务场景。<br>1.1.4 支持数据生命周期管理。您可以通过设置生命周期规则，将到期数据批量删除或者转储为更低成本的低频访问型存储或归档型存储。<br><br>1.2 强大、灵活的安全机制<br>1.2.1 灵活的鉴权，授权机制。提供STS和URL鉴权和授权机制、IP黑白名单、防盗链、主子账号等功能。<br>1.2.2 提供用户级别资源隔离机制和多集群同步机制（可选）。<br><br>1.3 数据冗余机制<br>OSS 采用数据冗余存储机制，将每个对象的不同冗余存储在同一个区域内多个设施的多个设备上，确保硬件失效时的数据可靠性和可用性。<br>1.3.1 OSS Object 操作具有强一致性，用户一旦收到了上传&#x2F;复制成功的响应，则该上传的 Object 就已经立即可读，且数据已经冗余写入到多个设备中。<br>1.3.2 OSS 会通过计算网络流量包的校验和，验证数据包在客户端和服务端之间传输中是否出错，保证数据完整传输。<br>1.3.3 OSS 的冗余存储机制，可支持两个存储设施并发损坏时，仍维持数据不丢失。</p>
+<ol start="2">
+<li>之前写的文章是关于<code>Spring Cloud  Alibaba</code>的，所以技术选型也就选了阿里的<code>OSS</code></li>
+<li>腾讯云也有<code>COS</code>对象存储免费使用6个月。<br><img src="https://img-blog.csdnimg.cn/20200115140605913.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><h2 id="怎么使用"><a href="#怎么使用" class="headerlink" title="怎么使用"></a>怎么使用</h2></li>
+</ol>
+<hr>
+<p>首先新建一个存储空间<code>bucket</code><br><img src="https://img-blog.csdnimg.cn/20200115141428367.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>点击<code>创建Bucket</code><br><img src="https://img-blog.csdnimg.cn/20200115141522460.png#pic_center" alt="在这里插入图片描述"><br>个人开发选择<strong>标准存储</strong>，读写权限选择<strong>公共读</strong><br><img src="https://img-blog.csdnimg.cn/2020011514180773.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br><strong>记住你的<code>bucket</code>名称 和 <code>Endpoint</code></strong><br><img src="https://img-blog.csdnimg.cn/20200115142032487.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>创建结束。</p>
+<p>第二步<br><img src="https://img-blog.csdnimg.cn/20200115142908599.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<blockquote>
+<p>&#x2F;&#x2F; 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 <a target="_blank" rel="noopener" href="https://ram.console.aliyun.com/">https://ram.console.aliyun.com</a> 创建RAM账号。</p>
+</blockquote>
+<p>根据文档说需要<code>AccessKeyId</code>和<code>AccessKey</code> <a target="_blank" rel="noopener" href="https://ram.console.aliyun.com/">RAM</a>创建子账号在创建 <code>AccessKey</code></p>
+<p><img src="https://img-blog.csdnimg.cn/20200115144211244.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20200115144239292.png#pic_center" alt="在这里插入图片描述"><br>勾选<code>编程访问</code><br><img src="https://img-blog.csdnimg.cn/20200115144457513.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>点击刚才创建的用户，将其<code>AccessKey</code>删除，重新创建<br><img src="https://img-blog.csdnimg.cn/20200115144620330.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>妥善保管<code>AccessKey</code>和 <code>Secret</code><br>然后我们需要在<code>OSS</code>对改用户进行授权，点击<code>文件管理</code> -&gt;<code>授权</code>。<br><img src="https://img-blog.csdnimg.cn/20200115145730824.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>点击<code>新增授权</code><br><img src="https://img-blog.csdnimg.cn/20200115145930995.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br><code>选择子账号</code>-&gt;<code>刚刚创建的用户</code>，权限改成<code>读/写</code>，确定。<br>接下来就可以撸代码了。</p>
+<hr>
+<p>首先需要 <code>aliyun-sdk-oss:3.6.0</code>，因为我的版本号在父 项目里规定了，所以这里不用写</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.aliyun.oss<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>aliyun-sdk-oss<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">exclusions</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;<span class="name">exclusion</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-logging<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-logging<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;/<span class="name">exclusion</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;/<span class="name">exclusions</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>为此我再定义了一个文件上传的实体类<code>FileInfo</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="meta">@AllArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FileInfo</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> <span class="number">5955600146057380475L</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> String path;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>controller</code>接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(value = &quot;upload&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UploadController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">ENDPOINT</span> <span class="operator">=</span> <span class="string">&quot;你的Endpoint&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">ACCESS_KEY_ID</span> <span class="operator">=</span> <span class="string">&quot;你的Key&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">ACCESS_KEY_SECRET</span> <span class="operator">=</span> <span class="string">&quot;你的Secret&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">BUCKET_NAME</span> <span class="operator">=</span> <span class="string">&quot;你的bucket&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 文件上传</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   multipartFile   &#123;<span class="doctag">@link</span> MultipartFile&#125;               文件</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  ResponseResult  &#123;<span class="doctag">@link</span> ResponseResult&lt;FileInfo&gt;&#125;    文件上传路径</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@PostMapping(value = &quot;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> RespResult&lt;FileInfo&gt; <span class="title function_">upload</span><span class="params">(MultipartFile multipartFile)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">fileName</span> <span class="operator">=</span> multipartFile.getOriginalFilename();</span><br><span class="line">        <span class="comment">// 获取文件后缀</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">suffix</span> <span class="operator">=</span> fileName.substring(fileName.lastIndexOf(<span class="string">&quot;.&quot;</span>) + <span class="number">1</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">newName</span> <span class="operator">=</span> UUID.randomUUID() + <span class="string">&quot;.&quot;</span> + suffix;</span><br><span class="line"></span><br><span class="line">        <span class="type">OSS</span> <span class="variable">client</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OSSClientBuilder</span>().build(ENDPOINT, ACCESS_KEY_ID, ACCESS_KEY_SECRET);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            client.putObject(<span class="keyword">new</span> <span class="title class_">PutObjectRequest</span>(BUCKET_NAME, newName, <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(multipartFile.getBytes())));</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RespResult</span>&lt;&gt;(<span class="number">200</span>, <span class="string">&quot;文件上传成功&quot;</span>, <span class="keyword">new</span> <span class="title class_">FileInfo</span>(<span class="string">&quot;http://&quot;</span> + BUCKET_NAME + <span class="string">&quot;.&quot;</span> + ENDPOINT + <span class="string">&quot;/&quot;</span> + newName));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RespResult</span>&lt;&gt;(<span class="number">20002</span>, <span class="string">&quot;文件上传失败，请重试&quot;</span>, <span class="literal">null</span>);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            client.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试结束后可以看一眼<code>bucket</code> 信息，点开上传的文件可以看到<code>URL</code>，这样我们就可以将他的<code>URL</code>，添加到<code>json</code>里，即我代码最后的<code>return</code>语句即<br><code>http://BUCKET_NAME.ENDPOINT/fileName</code><br><img src="https://img-blog.csdnimg.cn/20200115152313829.png#pic_center" alt="在这里插入图片描述"></p>
+<hr>
+<p>测试<br>POSTMAN<br><img src="https://img-blog.csdnimg.cn/20200115152739917.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20200115152822643.png#pic_center" alt="在这里插入图片描述"><br>一定要选择<code>File</code><br><img src="https://img-blog.csdnimg.cn/20200115152950174.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEyNjQ2OA==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>这样我们的文件路径也返回了，前端只要获取到这个路径就可以实现上传和加载图片的功能了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+              <a href="/tags/oss/" rel="tag"># oss</a>
+              <a href="/tags/aliyun/" rel="tag"># aliyun</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/05/16/BloomFilter/" rel="next" title="BloomFilter 布隆过滤器">
+      BloomFilter 布隆过滤器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%BF%E9%87%8C%E4%BA%91OSS%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8"><span class="nav-number">1.</span> <span class="nav-text">阿里云OSS对象存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91OSS"><span class="nav-number">2.</span> <span class="nav-text">为什么使用阿里云OSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">怎么使用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Laoshiren</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Laoshiren</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

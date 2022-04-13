@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"laoshiren1207.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="场景中国现在有9亿网民，我们随便一个人做点什么都会产生大量数据，比如看一下视频发表一下感想。   点赞57万，投币45万，评论1W+，再比如前段时间的618购物节，无数网民疯狂购物产生无数的消费数据，这么庞大的数据量该如何存储？ 前言我们都知道mysql有性能瓶颈，当数据量到达2100w左右的时候，效率就会大幅下降。 12345678910111213141516mysql&gt; show gl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分库分表 ShardingSphere">
+<meta property="og:url" content="https://laoshiren1207.github.io/2020/07/01/ShardingSphere/index.html">
+<meta property="og:site_name" content="LaoShiRen1207">
+<meta property="og:description" content="场景中国现在有9亿网民，我们随便一个人做点什么都会产生大量数据，比如看一下视频发表一下感想。   点赞57万，投币45万，评论1W+，再比如前段时间的618购物节，无数网民疯狂购物产生无数的消费数据，这么庞大的数据量该如何存储？ 前言我们都知道mysql有性能瓶颈，当数据量到达2100w左右的时候，效率就会大幅下降。 12345678910111213141516mysql&gt; show gl">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://laoshiren.oss-cn-shanghai.aliyuncs.com/6113b3f2-e0b4-4504-856a-2d311271052d.jpg">
+<meta property="og:image" content="https://shardingsphere.apache.org/document/legacy/4.x/document/img/sharding-jdbc-brief.png">
+<meta property="og:image" content="https://shardingsphere.apache.org/document/legacy/4.x/document/img/sharding-jdbc-brief.png">
+<meta property="article:published_time" content="2020-07-01T14:37:48.000Z">
+<meta property="article:modified_time" content="2022-04-13T06:52:11.180Z">
+<meta property="article:author" content="Laoshiren">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="SpringBoot">
+<meta property="article:tag" content="Mybatis-Plus">
+<meta property="article:tag" content="ShardingSphere">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://laoshiren.oss-cn-shanghai.aliyuncs.com/6113b3f2-e0b4-4504-856a-2d311271052d.jpg">
+
+<link rel="canonical" href="https://laoshiren1207.github.io/2020/07/01/ShardingSphere/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分库分表 ShardingSphere | LaoShiRen1207</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">LaoShiRen1207</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天下有太多难学的技术</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://laoshiren1207.github.io/2020/07/01/ShardingSphere/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Laoshiren">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LaoShiRen1207">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分库分表 ShardingSphere
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-01 22:37:48" itemprop="dateCreated datePublished" datetime="2020-07-01T22:37:48+08:00">2020-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-13 14:52:11" itemprop="dateModified" datetime="2022-04-13T14:52:11+08:00">2022-04-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>中国现在有9亿网民，我们随便一个人做点什么都会产生大量数据，比如看一下视频发表一下感想。</p>
+<img src="https://laoshiren.oss-cn-shanghai.aliyuncs.com/6113b3f2-e0b4-4504-856a-2d311271052d.jpg" style="zoom:75%;" />
+
+<p>点赞57万，投币45万，评论1W+，再比如前段时间的618购物节，无数网民疯狂购物产生无数的消费数据，这么庞大的数据量该如何存储？</p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>我们都知道<code>mysql</code>有性能瓶颈，当数据量到达2100w左右的时候，效率就会大幅下降。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">show</span> <span class="keyword">global</span> variables <span class="keyword">like</span> <span class="string">&#x27;%page%&#x27;</span>;</span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------------------+-----------+</span></span><br><span class="line"><span class="operator">|</span> Variable_name                        <span class="operator">|</span> <span class="keyword">Value</span>     <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------------------+-----------+</span></span><br><span class="line"><span class="operator">|</span> innodb_log_compressed_pages          <span class="operator">|</span> <span class="keyword">ON</span>        <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_max_dirty_pages_pct           <span class="operator">|</span> <span class="number">75.000000</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_max_dirty_pages_pct_lwm       <span class="operator">|</span> <span class="number">0.000000</span>  <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_page_cleaners                 <span class="operator">|</span> <span class="number">1</span>         <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_page_size                     <span class="operator">|</span> <span class="number">16384</span>     <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_stats_persistent_sample_pages <span class="operator">|</span> <span class="number">20</span>        <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_stats_sample_pages            <span class="operator">|</span> <span class="number">8</span>         <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> innodb_stats_transient_sample_pages  <span class="operator">|</span> <span class="number">8</span>         <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> large_page_size                      <span class="operator">|</span> <span class="number">0</span>         <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> large_pages                          <span class="operator">|</span> OFF       <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">--------------------------------------+-----------+</span></span><br><span class="line"><span class="number">10</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.01</span> sec)</span><br></pre></td></tr></table></figure>
+
+<p>也就是说<code>innode_page_size</code>为<code>16kb</code>，我们常用<code>int</code>，<code>bigint</code>和<code>varchar</code>作为主键，当然<code>mysql</code>官方推荐使用<code>int</code>或<code>bigint</code>作为主键。总所周知<code>mysql</code>中一个<code>int</code>类型的所占用字节为4个字节，一个<code>bigint</code>占了8个字节。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> `information_schema`.`TABLES` <span class="keyword">where</span> table_name<span class="operator">=</span><span class="string">&#x27;table_name&#x27;</span> </span><br></pre></td></tr></table></figure>
+
+<p>可以查看有关表的信息，关于索引的大小就在<code>index_length</code>，所以一个索引的占用是6个字节。</p>
+<p>所以一个<code>page</code>我们可以存多少数据量呢，首先我们<code>B+tree</code>的<code>degree</code>是3。</p>
+<p><code>int</code>类型 16384 &#x2F; (6+4) &#x3D; 1638 行，也就是说我们能存</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1638 * 1638 * 16 = 42928704</span><br></pre></td></tr></table></figure>
+
+<p><code>bigint</code>类型 16384 &#x2F; (8+6) &#x3D; 1170，也就是说能存</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1170 * 1170 * 16 = 21977344</span><br></pre></td></tr></table></figure>
+
+<p>所以我们说<code>mysql</code>到了2100w，就到头了，不是因为不能存，而是数据存进去，<code>B+tree</code>的高度会增加，遍历子节点的次数要增加。</p>
+<h2 id="分库分表设计"><a href="#分库分表设计" class="headerlink" title="分库分表设计"></a>分库分表设计</h2><p>我们可以采用水平拓展的方式去实现存储。比如9亿网民，单张表我们存2100W。那就多搞张表。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 数据库1</span></span><br><span class="line">db_member_0 </span><br><span class="line">	tb_member_0</span><br><span class="line">	tb_member_1</span><br><span class="line">	tb_member_2</span><br><span class="line">	tb_member_3</span><br><span class="line">	tb_member_9</span><br><span class="line"><span class="comment"># 数据库2</span></span><br><span class="line">db_member_1 </span><br><span class="line">	tb_member_0</span><br><span class="line">	tb_member_1</span><br><span class="line">	tb_member_9</span><br><span class="line">db_member_9 	</span><br></pre></td></tr></table></figure>
+
+<p><code>db_member_x</code>表示我第<code>x</code>个数据库，<code>tb_member_x</code>表示库里的第<code>x</code>个表。这样就可以存21亿的数据量。</p>
+<p>如何存储某一位网民的假设我们的主键<code>id</code>是202006272319230001，这个<code>id</code>是用年月日时分秒加一个0001这样的数字组合而成的，我们对单库的表个数取模，比如我数据库<code>db_member_0 </code>中用户表有10个，那<code>id</code>个位对10取模就存在某个表里，他的十位取模决定了存在某个库里。</p>
+<p>也就是说0001存在0号库的1号表里，0072存7号库的2号表里。</p>
+<h2 id="Leaf-TBD"><a href="#Leaf-TBD" class="headerlink" title="Leaf (TBD)"></a>Leaf (TBD)</h2><p>上述说了这么多，但是我们的数据库表<code>id</code>可能是自增的，那查询的时候如何处理?</p>
+<p>这个就是今天第一个要解决的问题<code>leaf</code>分布式<code>ID</code>。</p>
+<blockquote>
+<p>There are no two identical leaves in the world.</p>
+<p>世界上没有两片完全相同的树叶。</p>
+<p> — 莱布尼茨</p>
+</blockquote>
+<h2 id="ShardingSphere"><a href="#ShardingSphere" class="headerlink" title="ShardingSphere"></a>ShardingSphere</h2><p><code>ShardingSphere</code>是一套开源的分布式数据库中间件解决方案组成的生态圈，它由<code>Sharding-JDBC</code>、<code>Sharding-Proxy</code>和<code>Sharding-Sidecar</code>（计划中）这3款相互独立的产品组成。 他们均提供标准化的数据分片、分布式事务和数据库治理功能，可适用于如<code>Java</code>同构、异构语言、云原生等各种多样化的应用场景。</p>
+<h3 id="Sharding-JDBC"><a href="#Sharding-JDBC" class="headerlink" title="Sharding-JDBC"></a>Sharding-JDBC</h3><p>定位为轻量级<code>Java</code>框架，在<code>Java</code>的<code>JDBC</code>层提供的额外服务。 它使用客户端直连数据库，以<code>jar</code>包形式提供服务，无需额外部署和依赖，可理解为增强版的<code>JDBC</code>驱动，完全兼容<code>JDBC</code>和各种<code>ORM</code>框架。</p>
+<img src="https://shardingsphere.apache.org/document/legacy/4.x/document/img/sharding-jdbc-brief.png" style="zoom:50%;" />
+
+<p>实际参考项目 <a target="_blank" rel="noopener" href="https://github.com/laoShiRen1207/hello-apache-shardingsphere/tree/master/hello-sharding-jdbc"><code>hello-sharding-jdbc</code></a><br>本项目采用<code>mysql</code>+<code>mybatis-Plus</code>开发，创建2个数据库。</p>
+<h4 id="mysql-环境"><a href="#mysql-环境" class="headerlink" title="mysql 环境"></a>mysql 环境</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 数据库0 </span></span><br><span class="line"><span class="keyword">CREATE</span> DATABASE `db_order_0` </span><br><span class="line"><span class="keyword">DEFAULT</span> <span class="type">CHARACTER</span> <span class="keyword">SET</span> utf8mb4 <span class="keyword">COLLATE</span> utf8mb4_0900_ai_ci ;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 数据库1</span></span><br><span class="line"><span class="keyword">CREATE</span> DATABASE `db_order_1` </span><br><span class="line"><span class="keyword">DEFAULT</span> <span class="type">CHARACTER</span> <span class="keyword">SET</span> utf8mb4 <span class="keyword">COLLATE</span> utf8mb4_0900_ai_ci ;</span><br></pre></td></tr></table></figure>
+<p>在每一个数据库创建2张表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 数据库0</span></span><br><span class="line">use db_order_0;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `tb_order_0` (</span><br><span class="line">    `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    `order_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">81</span> <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 <span class="keyword">COLLATE</span><span class="operator">=</span>utf8mb4_0900_ai_ci;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `tb_order_1` (</span><br><span class="line">    `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    `order_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">81</span> <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 <span class="keyword">COLLATE</span><span class="operator">=</span>utf8mb4_0900_ai_ci;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 数据库1</span></span><br><span class="line">use db_order_1;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `tb_order_0` (</span><br><span class="line">    `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    `order_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">81</span> <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 <span class="keyword">COLLATE</span><span class="operator">=</span>utf8mb4_0900_ai_ci;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `tb_order_1` (</span><br><span class="line">    `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    `order_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">81</span> <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 <span class="keyword">COLLATE</span><span class="operator">=</span>utf8mb4_0900_ai_ci;</span><br></pre></td></tr></table></figure>
+<p>还得创建一个模型表，因为得使用<code>mybatis-Plus</code>生成代码，所以在0号数据库生成一个逻辑表，表结构和分表的表结构一致</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `tb_order` (</span><br><span class="line">    `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    `order_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">81</span> <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 <span class="keyword">COLLATE</span><span class="operator">=</span>utf8mb4_0900_ai_ci;</span><br></pre></td></tr></table></figure>
+
+<h4 id="添加依赖"><a href="#添加依赖" class="headerlink" title="添加依赖"></a>添加依赖</h4><p>主要是<code>mysql</code>的依赖版本问题需要注意</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- MySQL --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>mysql<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mysql-connector-java<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- MySQL 驱动的版本号必须是 5.1.48 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.1.48<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- MyBatis-Plus --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.baomidou<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-plus-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- Apache ShardingSphere --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.shardingsphere<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>sharding-jdbc-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.0.0-RC3<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">main:</span></span><br><span class="line">    <span class="attr">allow-bean-definition-overriding:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">shardingsphere:</span></span><br><span class="line">    <span class="attr">props:</span></span><br><span class="line">      <span class="attr">sql:</span></span><br><span class="line">      <span class="comment"># 是否显示sql语句 会将逻辑语句和实际执行的语句打印到控制台</span></span><br><span class="line">        <span class="attr">show:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">datasource:</span></span><br><span class="line">      <span class="comment"># 分库分表 可以配置多个数据源</span></span><br><span class="line">      <span class="attr">names:</span> <span class="string">ds0,ds1</span></span><br><span class="line">      <span class="comment"># 数据库0 </span></span><br><span class="line">      <span class="attr">ds0:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">com.zaxxer.hikari.HikariDataSource</span></span><br><span class="line">        <span class="attr">driver-class-name:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">        <span class="attr">jdbc-url:</span> <span class="string">jdbc:mysql://192.168.8.50:3306/db_order_0?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=Hongkong&amp;useSSL=false</span></span><br><span class="line">        <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">password:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">hikari:</span></span><br><span class="line">          <span class="attr">minimum-idle:</span> <span class="number">5</span></span><br><span class="line">          <span class="attr">idle-timeout:</span> <span class="number">600000</span></span><br><span class="line">          <span class="attr">maximum-pool-size:</span> <span class="number">10</span></span><br><span class="line">          <span class="attr">auto-commit:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">pool-name:</span> <span class="string">MyHikariCP</span></span><br><span class="line">          <span class="attr">max-lifetime:</span> <span class="number">1800000</span></span><br><span class="line">          <span class="attr">connection-timeout:</span> <span class="number">30000</span></span><br><span class="line">          <span class="attr">connection-test-query:</span> <span class="string">SELECT</span> <span class="number">1</span></span><br><span class="line">    <span class="comment"># 分库规则</span></span><br><span class="line">    <span class="attr">sharding:</span></span><br><span class="line">      <span class="comment"># 逻辑表 可以多个 ,分隔</span></span><br><span class="line">      <span class="attr">binding-tables:</span> <span class="string">tb_order</span></span><br><span class="line">      <span class="attr">default-database-strategy:</span></span><br><span class="line">        <span class="attr">inline:</span></span><br><span class="line">          <span class="comment"># user_id 对2取余，几个数据库就对多少取模，这样就可以选择 ds0,ds1...ds9</span></span><br><span class="line">          <span class="attr">algorithm-expression:</span> <span class="string">ds$-&gt;&#123;user_id</span> <span class="string">%</span> <span class="number">2</span><span class="string">&#125;</span></span><br><span class="line">          <span class="attr">sharding-column:</span> <span class="string">user_id</span></span><br><span class="line">      <span class="attr">tables:</span></span><br><span class="line">        <span class="attr">tb_order:</span></span><br><span class="line">          <span class="attr">actual-data-nodes:</span> <span class="string">ds$-&gt;&#123;0..1&#125;.tb_order_$-&gt;&#123;0..1&#125;</span></span><br><span class="line">          <span class="attr">table-strategy:</span></span><br><span class="line">            <span class="attr">inline:</span></span><br><span class="line">              <span class="comment"># 使用order_id 分别打在不同表上 </span></span><br><span class="line">              <span class="attr">algorithm-expression:</span> <span class="string">tb_order_$-&gt;&#123;order_id</span> <span class="string">%</span> <span class="number">2</span><span class="string">&#125;</span></span><br><span class="line">              <span class="attr">sharding-column:</span> <span class="string">order_id</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="执行sql"><a href="#执行sql" class="headerlink" title="执行sql"></a>执行sql</h4><h5 id="查询全部"><a href="#查询全部" class="headerlink" title="查询全部"></a>查询全部</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QueryWrapper&lt;TbOrder&gt; queryWrapper = <span class="keyword">new</span> <span class="title class_">QueryWrapper</span>&lt;&gt;();</span><br><span class="line">List&lt;TbOrder&gt; tbOrders = mapper.selectList(queryWrapper);</span><br></pre></td></tr></table></figure>
+<p>日志，实际查找了4张表 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Rule Type: sharding</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Logic SQL: SELECT  id,order_id,user_id  FROM tb_order</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : SQLStatement: SelectSQLStatementContext(super=CommonSQLStatementContext(sqlStatement=org.apache.shardingsphere.core.parse.sql.statement.dml.SelectStatement@509a6095, tablesContext=TablesContext(tables=[Table(name=tb_order, alias=Optional.absent())], schema=Optional.absent())), projectionsContext=ProjectionsContext(startIndex=8, stopIndex=26, distinctRow=false, projections=[ColumnProjection(owner=null, name=id, alias=Optional.absent()), ColumnProjection(owner=null, name=order_id, alias=Optional.absent()), ColumnProjection(owner=null, name=user_id, alias=Optional.absent())]), groupByContext=org.apache.shardingsphere.core.preprocessor.segment.select.groupby.GroupByContext@57cabdc3, orderByContext=org.apache.shardingsphere.core.preprocessor.segment.select.orderby.OrderByContext@75bd28d, paginationContext=org.apache.shardingsphere.core.preprocessor.segment.select.pagination.PaginationContext@129c4d19, containsSubquery=false)</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_0</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_1</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds1 ::: SELECT  id,order_id,user_id  FROM tb_order_0</span><br><span class="line">2020-07-01 12:51:07.113  INFO 21232 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds1 ::: SELECT  id,order_id,user_id  FROM tb_order_1</span><br></pre></td></tr></table></figure>
+
+<h5 id="插入数据"><a href="#插入数据" class="headerlink" title="插入数据"></a>插入数据</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">100</span> ; i++) &#123;</span><br><span class="line">    <span class="type">TbOrder</span> <span class="variable">tbOrder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TbOrder</span>();</span><br><span class="line">    tbOrder.setUserId(Long.parseLong(<span class="string">&quot;&quot;</span>+i));</span><br><span class="line">    <span class="comment">// 随机打在某个库的2张中的1张表</span></span><br><span class="line">    tbOrder.setOrderId(<span class="keyword">new</span> <span class="title class_">Double</span>((Math.random()*<span class="number">2</span>)).longValue());</span><br><span class="line">    mapper.insert(tbOrder);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>日志，库是根据<code>userId</code>对2取余得到的结果，表是<code>orderId</code>随机生成后对2取余的结果()</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2020-07-01 12:55:01.704  INFO 17012 --- [           main] ShardingSphere-SQL                       : Rule Type: sharding</span><br><span class="line">2020-07-01 12:55:01.704  INFO 17012 --- [           main] ShardingSphere-SQL                       : Logic SQL: INSERT INTO tb_order  ( order_id,user_id )  VALUES  ( ?,? )</span><br><span class="line">2020-07-01 12:55:01.704  INFO 17012 --- [           main] ShardingSphere-SQL                       : SQLStatement: InsertSQLStatementContext(super=CommonSQLStatementContext(sqlStatement=org.apache.shardingsphere.core.parse.sql.statement.dml.InsertStatement@61b838f2, tablesContext=TablesContext(tables=[Table(name=tb_order, alias=Optional.absent())], schema=Optional.absent())), columnNames=[order_id, user_id], insertValueContexts=[InsertValueContext(parametersCount=2, valueExpressions=[ParameterMarkerExpressionSegment(startIndex=55, stopIndex=55, parameterMarkerIndex=0), ParameterMarkerExpressionSegment(startIndex=58, stopIndex=58, parameterMarkerIndex=1)], parameters=[1, 2])])</span><br><span class="line">2020-07-01 12:55:01.705  INFO 17012 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: INSERT INTO tb_order_1  ( order_id,user_id )  VALUES  (?, ?) ::: [1, 2]</span><br></pre></td></tr></table></figure>
+<h5 id="查询单条记录"><a href="#查询单条记录" class="headerlink" title="查询单条记录"></a>查询单条记录</h5><p>分2种情况</p>
+<ol>
+<li><p>如果是走了<code>sharding-jdbc</code>的<code>sharding-column</code>键，那么实际查询查其中分库分表的一部分</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">QueryWrapper&lt;TbOrder&gt; queryWrapper = <span class="keyword">new</span> <span class="title class_">QueryWrapper</span>&lt;&gt;();</span><br><span class="line">queryWrapper.eq(<span class="string">&quot;user_id&quot;</span>,<span class="number">32</span>);</span><br><span class="line">List&lt;TbOrder&gt; tbOrders  = mapper.selectList(queryWrapper);</span><br></pre></td></tr></table></figure>
+<p>日志</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2020-07-01 13:01:20.389  INFO 20300 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_0 WHERE (user_id = ?) ::: [32]</span><br><span class="line">2020-07-01 13:01:20.389  INFO 20300 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_1 WHERE (user_id = ?) ::: [32]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果没走<code>sharding-column</code>键，就会全库全表查询。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">QueryWrapper&lt;TbOrder&gt; queryWrapper = <span class="keyword">new</span> <span class="title class_">QueryWrapper</span>&lt;&gt;();</span><br><span class="line">queryWrapper.eq(<span class="string">&quot;id&quot;</span>,<span class="number">220</span>);</span><br><span class="line">List&lt;TbOrder&gt; tbOrders  = mapper.selectList(queryWrapper);</span><br></pre></td></tr></table></figure>
+<p>日志</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2020-07-01 13:04:13.088  INFO 13268 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_0 WHERE (id = ?) ::: [220]</span><br><span class="line">2020-07-01 13:04:13.088  INFO 13268 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds0 ::: SELECT  id,order_id,user_id  FROM tb_order_1 WHERE (id = ?) ::: [220]</span><br><span class="line">2020-07-01 13:04:13.088  INFO 13268 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds1 ::: SELECT  id,order_id,user_id  FROM tb_order_0 WHERE (id = ?) ::: [220]</span><br><span class="line">2020-07-01 13:04:13.088  INFO 13268 --- [           main] ShardingSphere-SQL                       : Actual SQL: ds1 ::: SELECT  id,order_id,user_id  FROM tb_order_1 WHERE (id = ?) ::: [220]</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>回头再看这张图，就可以明白实现的基本操作,就可以理解<code>sharding-jdbc</code>如何分库分表的操作了<br><img src="https://shardingsphere.apache.org/document/legacy/4.x/document/img/sharding-jdbc-brief.png" style="zoom:65%;" /></p>
+<h3 id="Sharding-Proxy-TBD"><a href="#Sharding-Proxy-TBD" class="headerlink" title="Sharding-Proxy (TBD)"></a>Sharding-Proxy (TBD)</h3><h3 id="资料"><a href="#资料" class="headerlink" title="资料"></a>资料</h3><p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2017/04/21/mt-leaf.html"><a target="_blank" rel="noopener" href="https://tech.meituan.com/2017/04/21/mt-leaf.html">Leaf——美团点评分布式ID生成系统</a></a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html"><a target="_blank" rel="noopener" href="https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html">B+Tree 数据结构</a></a></p>
+<p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/29692421/mysql-why-is-my-index-length-0-0-bytes"><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/29692421/mysql-why-is-my-index-length-0-0-bytes">为什么我的mysql里index_length是0bytes</a></a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+              <a href="/tags/Mybatis-Plus/" rel="tag"># Mybatis-Plus</a>
+              <a href="/tags/ShardingSphere/" rel="tag"># ShardingSphere</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/21/MyBatis-Plus/" rel="prev" title="MyBatis-Plus 效率至上，为简化开发而生">
+      <i class="fa fa-chevron-left"></i> MyBatis-Plus 效率至上，为简化开发而生
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/11/Seata/" rel="next" title="分布式事务 Seata">
+      分布式事务 Seata <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">2.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.</span> <span class="nav-text">分库分表设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Leaf-TBD"><span class="nav-number">4.</span> <span class="nav-text">Leaf (TBD)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ShardingSphere"><span class="nav-number">5.</span> <span class="nav-text">ShardingSphere</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Sharding-JDBC"><span class="nav-number">5.1.</span> <span class="nav-text">Sharding-JDBC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#mysql-%E7%8E%AF%E5%A2%83"><span class="nav-number">5.1.1.</span> <span class="nav-text">mysql 环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E4%BE%9D%E8%B5%96"><span class="nav-number">5.1.2.</span> <span class="nav-text">添加依赖</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">5.1.3.</span> <span class="nav-text">配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A7%E8%A1%8Csql"><span class="nav-number">5.1.4.</span> <span class="nav-text">执行sql</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E5%85%A8%E9%83%A8"><span class="nav-number">5.1.4.1.</span> <span class="nav-text">查询全部</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE"><span class="nav-number">5.1.4.2.</span> <span class="nav-text">插入数据</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E5%8D%95%E6%9D%A1%E8%AE%B0%E5%BD%95"><span class="nav-number">5.1.4.3.</span> <span class="nav-text">查询单条记录</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sharding-Proxy-TBD"><span class="nav-number">5.2.</span> <span class="nav-text">Sharding-Proxy (TBD)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%84%E6%96%99"><span class="nav-number">5.3.</span> <span class="nav-text">资料</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Laoshiren</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Laoshiren</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

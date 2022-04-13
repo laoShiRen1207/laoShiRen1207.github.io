@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"laoshiren1207.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="HiveHive 基本概念什么是 HiveHive：由 Facebook 开源用于解决海量结构化日志的数据统计。Hive 是基于 Hadoop 的一个数据仓库工具，可以将结构化的数据文件映射为一张表，并提供类 SQL 查询功能。本质是：将 HQL 转化成 MapReduce 程序   Hive 处理的数据存储在 HDFS Hive 分析数据底层的默认实现是 MapReduce 执行程序运行在 Y">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hive">
+<meta property="og:url" content="https://laoshiren1207.github.io/2022/01/13/Hive/index.html">
+<meta property="og:site_name" content="LaoShiRen1207">
+<meta property="og:description" content="HiveHive 基本概念什么是 HiveHive：由 Facebook 开源用于解决海量结构化日志的数据统计。Hive 是基于 Hadoop 的一个数据仓库工具，可以将结构化的数据文件映射为一张表，并提供类 SQL 查询功能。本质是：将 HQL 转化成 MapReduce 程序   Hive 处理的数据存储在 HDFS Hive 分析数据底层的默认实现是 MapReduce 执行程序运行在 Y">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0c1e0b275c014154b2cfbb1dc0ea0ae4.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a122087055af4514bc0c0ca24c7e14ce.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a0fab80cff844db99f0a1304f31e34fd.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/98b1dc06dcfa445b98d2a3557a2e5737.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/36868cc11f6e40438e350d8132d4f799.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d755309f239b4532afa687b2d3adc3e6.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ca7697d5fcff4cb996758eb1a4f86a90.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/960dd4a201064f9ba4195956c93dd379.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a075d435b0a24e7e87562741844d18dc.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9c9ce282a8bb41e6b539157b7f42a92d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b34c7eec1b984c139f506c090f00d000.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b6b0d8261c2545ada7a66d8e1d3ee5d0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6f585536ee0b4620b181c85eadd568c0.png">
+<meta property="article:published_time" content="2022-01-13T12:14:20.000Z">
+<meta property="article:modified_time" content="2022-04-13T07:25:18.304Z">
+<meta property="article:author" content="Laoshiren">
+<meta property="article:tag" content="大数据">
+<meta property="article:tag" content="DataWareHouse">
+<meta property="article:tag" content="Hive">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/0c1e0b275c014154b2cfbb1dc0ea0ae4.png">
+
+<link rel="canonical" href="https://laoshiren1207.github.io/2022/01/13/Hive/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hive | LaoShiRen1207</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">LaoShiRen1207</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天下有太多难学的技术</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://laoshiren1207.github.io/2022/01/13/Hive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Laoshiren">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LaoShiRen1207">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hive
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-13 20:14:20" itemprop="dateCreated datePublished" datetime="2022-01-13T20:14:20+08:00">2022-01-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-13 15:25:18" itemprop="dateModified" datetime="2022-04-13T15:25:18+08:00">2022-04-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/" itemprop="url" rel="index"><span itemprop="name">大数据</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/DataWareHouse/" itemprop="url" rel="index"><span itemprop="name">DataWareHouse</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <hr>
+<h1 id="Hive"><a href="#Hive" class="headerlink" title="Hive"></a>Hive</h1><h2 id="Hive-基本概念"><a href="#Hive-基本概念" class="headerlink" title="Hive 基本概念"></a>Hive 基本概念</h2><h3 id="什么是-Hive"><a href="#什么是-Hive" class="headerlink" title="什么是 Hive"></a>什么是 Hive</h3><p>Hive：由 Facebook 开源用于解决海量结构化日志的数据统计。<br>Hive 是基于 Hadoop 的一个数据仓库工具，可以将结构化的数据文件映射为一张表，并提供类 SQL 查询功能。<br>本质是：将 HQL 转化成 MapReduce 程序</p>
+<p><img src="https://img-blog.csdnimg.cn/0c1e0b275c014154b2cfbb1dc0ea0ae4.png" alt="在这里插入图片描述"></p>
+<ol>
+<li>Hive 处理的数据存储在 HDFS</li>
+<li>Hive 分析数据底层的默认实现是 MapReduce</li>
+<li>执行程序运行在 Yarn 上</li>
+</ol>
+<h3 id="Hive-的优缺点"><a href="#Hive-的优缺点" class="headerlink" title="Hive 的优缺点"></a>Hive 的优缺点</h3><p><strong>优点</strong></p>
+<ol>
+<li>操作接口采用类 SQL 语法，提供快速开发的能力（简单、容易上手）。</li>
+<li>避免了去写 MapReduce，减少开发人员的学习成本。</li>
+<li>Hive 的执行延迟比较高，因此 Hive 常用于数据分析，对实时性要求不高的场合。</li>
+<li>Hive 优势在于处理大数据，对于处理小数据没有优势，因为 Hive 的执行延迟比较高。</li>
+<li>Hive 支持用户自定义函数，用户可以根据自己的需求来实现自己的函数。</li>
+</ol>
+<p><strong>缺点</strong></p>
+<ol>
+<li>Hive 的 HQL 表达能力有限<ul>
+<li>迭代式算法无法表达</li>
+<li>数据挖掘方面不擅长</li>
+</ul>
+</li>
+<li>Hive 的效率比较低<ul>
+<li>Hive 自动生成的 MapReduce 作业，通常情况下不够智能化</li>
+<li>Hive 调优比较困难，粒度较粗</li>
+</ul>
+</li>
+</ol>
+<h3 id="Hive-架构原理"><a href="#Hive-架构原理" class="headerlink" title="Hive 架构原理"></a>Hive 架构原理</h3><p><img src="https://img-blog.csdnimg.cn/a122087055af4514bc0c0ca24c7e14ce.png" alt="在这里插入图片描述"></p>
+<h4 id="1．用户接口：Client"><a href="#1．用户接口：Client" class="headerlink" title="1．用户接口：Client"></a>1．用户接口：Client</h4><p>CLI（hive shell）、JDBC&#x2F;ODBC(java 访问 hive)、WEBUI（浏览器访问 hive）</p>
+<h4 id="2．元数据：Metastore"><a href="#2．元数据：Metastore" class="headerlink" title="2．元数据：Metastore"></a>2．元数据：Metastore</h4><p>元数据包括：表名、表所属的数据库（默认是 default）、表的拥有者、列&#x2F;分区字段、表的类型（是否是外部表）、表的数据所在目录等；<em>默认存储在自带的 derby 数据库中，推荐使用 MySQL 存储 Metastore</em></p>
+<h4 id="3．驱动器：Driver"><a href="#3．驱动器：Driver" class="headerlink" title="3．驱动器：Driver"></a>3．驱动器：Driver</h4><ul>
+<li>解析器（SQL Parser）：将 SQL 字符串转换成抽象语法树 AST，这一步一般都用第三方工具库完成，比如 antlr；对 AST 进行语法分析，比如表是否存在、字段是否存在、SQL 语义是否有误。</li>
+<li>编译器（Physical Plan）：将 AST 编译生成逻辑执行计划。</li>
+<li>优化器（Query Optimizer）：对逻辑执行计划进行优化。</li>
+<li>执行器（Execution）：把逻辑执行计划转换成可以运行的物理计划。对于 Hive 来说，就是 MR&#x2F;Spark。</li>
+</ul>
+<p>一条 HQL 交给 Hive 会先去 mysql  获取元数据（包括 HDFS 的存储路径，Reduce 后的存放路径） 然后连接 HDFS，将 HQL 翻译成 MapReduce 。 </p>
+<h2 id="Hive-安装"><a href="#Hive-安装" class="headerlink" title="Hive 安装"></a>Hive 安装</h2><p>1．<a target="_blank" rel="noopener" href="http://hive.apache.org/">Hive 官网地址 http://hive.apache.org/</a></p>
+<p>2．<a target="_blank" rel="noopener" href="https://cwiki.apache.org/confluence/display/Hive/GettingStarted">文档查看地址 https://cwiki.apache.org/confluence/display/Hive/GettingStarted</a></p>
+<p>3．<a target="_blank" rel="noopener" href="http://archive.apache.org/dist/hive/">下载地址 http://archive.apache.org/dist/hive/</a></p>
+<h3 id="安装hive"><a href="#安装hive" class="headerlink" title="安装hive"></a>安装hive</h3><ol>
+<li><p>解压缩</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf /opt/software/apache-hive-3.1.2-bin.tar.gz -C /home/module/</span><br><span class="line"></span><br><span class="line">mv /opt/module/apache-hive-3.1.2-bin/  /home/module/hive-3.1.2</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置环境变量</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/profile.d/my_hive_env.sh</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">HIVE_HOME</span></span><br><span class="line">export HIVE_HOME=/home/module/hive-3.1.2</span><br><span class="line">export PATH=$PATH:$HIVE_HOME/bin</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解决jar 冲突 <code> mv $HIVE_HOME/lib/log4j-slf4j-impl2.10.0.jar $HIVE_HOME/lib/log4j-slf4j-impl-2.10.0.bak</code></p>
+</li>
+<li><p>初始化元数据库</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">bin/schematool -dbType derby -initSchema</span><br><span class="line"><span class="meta prompt_"> # </span><span class="language-bash">这里可能会出现错误</span></span><br><span class="line">Exception in thread main java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/Stringl;Ljava/lang/Object;)V</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">异常原因 hadoop 和 hive 版本guava版本不一致</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">处理方法 复制hadoop guava 到hive 的lib</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">文件地址</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">HIVE_HOME/lib/guava...</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">HADOOP_HOME/share/hadoop/common/lib</span></span><br></pre></td></tr></table></figure></li>
+<li><p>启动 Hive <code>bin/hive</code></p>
+</li>
+</ol>
+<blockquote>
+<p>Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.</p>
+</blockquote>
+<p>Hive On MapReduce 已经在Hive 2被弃用了，可能在未来的版本不可用。考虑使用不同的执行引擎例如 spark tez 或者使用Hive 1.x 版本</p>
+<h3 id="Hive-简单使用"><a href="#Hive-简单使用" class="headerlink" title="Hive 简单使用"></a>Hive 简单使用</h3><p>查询数据库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">show databases;</span><br><span class="line"></span><br><span class="line">OK</span><br><span class="line">default</span><br></pre></td></tr></table></figure>
+
+<p>查看表</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">show tables;</span><br><span class="line"></span><br><span class="line">OK </span><br><span class="line">test</span><br></pre></td></tr></table></figure>
+
+<p>创建表</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">create table test(id int);</span><br><span class="line">OK </span><br></pre></td></tr></table></figure>
+
+<p>插入数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into test values(1);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/a0fab80cff844db99f0a1304f31e34fd.png" alt="在这里插入图片描述"></p>
+<p>使用 hdfs 查询 <code>hadoop fs -tail /user/hive/warehouse/test/000000_0</code><img src="https://img-blog.csdnimg.cn/98b1dc06dcfa445b98d2a3557a2e5737.png" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/36868cc11f6e40438e350d8132d4f799.png" alt="在这里插入图片描述"></p>
+<p>查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">select * from test;</span><br><span class="line"></span><br><span class="line">OK</span><br><span class="line">1</span><br><span class="line">Time taken: 0.084 seconds, Fetched: 1 row(s)</span><br></pre></td></tr></table></figure>
+
+<p>Hive 默认使用的元数据库为 derby，开启 Hive 之后就会占用元数据库，且不与其他客户端共享数据，所以我们需要将 Hive 的元数据地址改为 MySQL。</p>
+<h3 id="Mysql-安装"><a href="#Mysql-安装" class="headerlink" title="Mysql 安装"></a>Mysql 安装</h3><p>检查是否安装mysql </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rpm -qa|grep mariadb</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果存在删除mysql</span> </span><br><span class="line"></span><br><span class="line">sudo rpm -e --nodeps mariadb-libs</span><br></pre></td></tr></table></figure>
+
+<p>解压 MySQL 安装包</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tar -xf mysql-5.7.28-1.el7.x86_64.rpmbundle.tar</span><br><span class="line"></span><br><span class="line">rpm -ivh mysql-community-common-5.7.28-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-libs-5.7.28-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-libs-compat-5.7.28-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-client-5.7.28-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-server-5.7.28-1.el7.x86_64.rpm</span><br></pre></td></tr></table></figure>
+
+<p>通过 yum 安装缺少的依赖,然后重新安装 mysql-community-server-5.7.28-1.el7.x86_64 ，<code>yum install -y libaio</code></p>
+<p>查看 &#x2F;etc&#x2F;my.inf的 datadir 的值： &#x2F;var&#x2F;lib&#x2F;mysql </p>
+<p>删除该文件加下所有东西</p>
+<p>初始化数据库</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysqld --initialize --user=mysql</span><br><span class="line"></span><br><span class="line">cat /var/log/mysqld.log</span><br><span class="line"></span><br><span class="line">systemctl start mysqld</span><br><span class="line"> </span><br><span class="line">mysql -uroot -pXXX</span><br></pre></td></tr></table></figure>
+
+<p>修改参数</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 设置密码</span></span><br><span class="line"><span class="keyword">set</span> password <span class="operator">=</span> password(&quot;123456&quot;);</span><br><span class="line"><span class="comment">-- root 用户允许任意 ip 连接</span></span><br><span class="line"><span class="keyword">update</span> mysql.user <span class="keyword">set</span> host<span class="operator">=</span><span class="string">&#x27;%&#x27;</span> <span class="keyword">where</span> <span class="keyword">user</span><span class="operator">=</span><span class="string">&#x27;root&#x27;</span>;</span><br><span class="line"></span><br><span class="line">flush privileges;</span><br></pre></td></tr></table></figure>
+
+<p>创建元数据仓库</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> database metastore;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="配置Hive-metastore"><a href="#配置Hive-metastore" class="headerlink" title="配置Hive metastore"></a>配置Hive metastore</h3><p>上传mysql-lib，<code> cp /opt/software/mysql-connector-java5.1.38.jar $HIVE_HOME/lib</code></p>
+<p>新建 hive-site.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span>?&gt;</span></span><br><span class="line"><span class="meta">&lt;?xml-stylesheet type=<span class="string">&quot;text/xsl&quot;</span> href=<span class="string">&quot;configuration.xsl&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- jdbc 连接的 URL --&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>javax.jdo.option.ConnectionURL<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">value</span>&gt;</span>jdbc:mysql://hadoop201:3306/metastore?useSSL=false<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- jdbc 连接的 Driver--&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>javax.jdo.option.ConnectionDriverName<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">value</span>&gt;</span>com.mysql.jdbc.Driver<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- jdbc 连接的 username--&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>javax.jdo.option.ConnectionUserName<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">value</span>&gt;</span>root<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- jdbc 连接的 password --&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>javax.jdo.option.ConnectionPassword<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">value</span>&gt;</span>123456<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- Hive 元数据存储版本的验证 --&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.metastore.schema.verification<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">value</span>&gt;</span>false<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--元数据存储授权--&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.metastore.event.db.notification.api.auth<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">value</span>&gt;</span>false<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- Hive 默认在 HDFS 的工作目录 --&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.metastore.warehouse.dir<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">value</span>&gt;</span>/user/hive/warehouse<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>初始化元数据库 <code>schematool -initSchema -dbType mysql -verbose</code>，链接hive。</p>
+<p>当我们创建好了以后执行<code>show tables;</code>，发现没有数据，因为 mysql 的元数据的信息都不存在，存在于刚才的derby。但是我们实际执行<code>select * from test</code>时，会发现</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hive&gt;select * from test;</span><br><span class="line">OK</span><br><span class="line">1</span><br><span class="line">Time taken: 0.157 seconds, Fetched: 2 row(s)</span><br></pre></td></tr></table></figure>
+
+<p>那我们直接在刚才<code>/user/hive/warehouse/test</code> 添加文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">hadoop fs -put a.txt /user/hive/warehouse/test</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">连上hive 查询</span></span><br><span class="line"><span class="meta prompt_">hive&gt;</span><span class="language-bash">select * from <span class="built_in">test</span>;</span></span><br><span class="line">OK</span><br><span class="line">1</span><br><span class="line">1001</span><br><span class="line">1002</span><br><span class="line">1003</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/d755309f239b4532afa687b2d3adc3e6.png" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/ca7697d5fcff4cb996758eb1a4f86a90.png" alt="在这里插入图片描述"></p>
+<p>即我们创建的元数据存放在元数据库 metastore里，实际的文件存储在hdfs 中，而实际在hive 中执行简单的查询只会把sql 解析成对应的 hadoop fs 读取，读取hdfs 文件。</p>
+<h3 id="使用元数据服务的方式访问-Hive"><a href="#使用元数据服务的方式访问-Hive" class="headerlink" title="使用元数据服务的方式访问 Hive"></a>使用元数据服务的方式访问 Hive</h3><p>在 hive-site.xml 文件中添加如下配置信息</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 指定存储元数据要连接的地址 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.metastore.uris<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">value</span>&gt;</span>thrift://hadoop201:9083<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>启动 metastore</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hive --service metastore</span><br><span class="line">2020-04-24 16:58:08: Starting Hive Metastore Serverl</span><br></pre></td></tr></table></figure>
+
+<p>注意: 启动后窗口不能再操作，需打开一个新的 shell 窗口做别的操作</p>
+<h3 id="使用-JDBC-方式访问-Hive"><a href="#使用-JDBC-方式访问-Hive" class="headerlink" title="使用 JDBC 方式访问 Hive"></a>使用 JDBC 方式访问 Hive</h3><p>修改 hive-site.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 指定 hiveserver2 连接的 host --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.server2.thrift.bind.host<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">value</span>&gt;</span>hadoop201<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 指定 hiveserver2 连接的端口号 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.server2.thrift.port<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">value</span>&gt;</span>10000<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">name</span>&gt;</span>hive.server2.enable.doAs<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">value</span>&gt;</span>false<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>启动hiveserver2 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hiveserver2 --service hiveserver2</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动beeline</span></span><br><span class="line">beeline -u jdbc:hive2://hadoop201:10000 -n root</span><br></pre></td></tr></table></figure>
+
+<h3 id="脚本封装"><a href="#脚本封装" class="headerlink" title="脚本封装"></a>脚本封装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">HIVE_LOG_DIR=$HIVE_HOME/logs</span><br><span class="line">if [ ! -d $HIVE_LOG_DIR ]</span><br><span class="line">then</span><br><span class="line">mkdir -p $HIVE_LOG_DIR</span><br><span class="line">fi</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">检查进程是否运行正常，参数 1 为进程名，参数 2 为进程端口</span></span><br><span class="line">function check_process()</span><br><span class="line">&#123;</span><br><span class="line"> pid=$(ps -ef 2&gt;/dev/null | grep -v grep | grep -i $1 | awk &#x27;&#123;print$2&#125;&#x27;)</span><br><span class="line"> ppid=$(netstat -nltp 2&gt;/dev/null | grep $2 | awk &#x27;&#123;print $7&#125;&#x27; | cut -d &#x27;/&#x27; -f 1)</span><br><span class="line"> echo $pid</span><br><span class="line"> [[ &quot;$pid&quot; =~ &quot;$ppid&quot; ]] &amp;&amp; [ &quot;$ppid&quot; ] &amp;&amp; return 0 || return 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">function hive_start()</span><br><span class="line">&#123;</span><br><span class="line"> metapid=$(check_process HiveMetastore 9083)</span><br><span class="line"> cmd=&quot;nohup hive --service metastore &gt;$HIVE_LOG_DIR/metastore.log 2&gt;&amp;1 &amp;&quot;</span><br><span class="line"> [ -z &quot;$metapid&quot; ] &amp;&amp; eval $cmd || echo &quot;Metastroe 服务已启动&quot;</span><br><span class="line"> server2pid=$(check_process HiveServer2 10000)</span><br><span class="line"> cmd=&quot;nohup hiveserver2 &gt;$HIVE_LOG_DIR/hiveServer2.log 2&gt;&amp;1 &amp;&quot;</span><br><span class="line"> [ -z &quot;$server2pid&quot; ] &amp;&amp; eval $cmd || echo &quot;HiveServer2 服务已启动&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function hive_stop()</span><br><span class="line">&#123;</span><br><span class="line">metapid=$(check_process HiveMetastore 9083)</span><br><span class="line"> [ &quot;$metapid&quot; ] &amp;&amp; kill $metapid || echo &quot;Metastore 服务未启动&quot;</span><br><span class="line"> server2pid=$(check_process HiveServer2 10000)</span><br><span class="line"> [ &quot;$server2pid&quot; ] &amp;&amp; kill $server2pid || echo &quot;HiveServer2 服务未启动&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">case $1 in</span><br><span class="line">&quot;start&quot;)</span><br><span class="line"> hive_start</span><br><span class="line"> ;;</span><br><span class="line">&quot;stop&quot;)</span><br><span class="line"> hive_stop</span><br><span class="line"> ;;</span><br><span class="line">&quot;restart&quot;)</span><br><span class="line"> hive_stop</span><br><span class="line"> sleep 2</span><br><span class="line"> hive_start</span><br><span class="line"> ;;</span><br><span class="line">&quot;status&quot;)</span><br><span class="line">check_process HiveMetastore 9083 &gt;/dev/null &amp;&amp; echo &quot;Metastore 服务运行正常&quot; || echo &quot;Metastore 服务运行异常&quot;</span><br><span class="line"> check_process HiveServer2 10000 &gt;/dev/null &amp;&amp; echo &quot;HiveServer2 服务运行正常&quot; || echo &quot;HiveServer2 服务运行异常&quot;</span><br><span class="line"> ;;</span><br><span class="line">*)</span><br><span class="line"></span><br><span class="line"> echo Invalid Args!</span><br><span class="line"> echo &#x27;Usage: &#x27;$(basename $0)&#x27; start|stop|restart|status&#x27;</span><br><span class="line"> ;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
+
+<h2 id="Hive-数据类型"><a href="#Hive-数据类型" class="headerlink" title="Hive 数据类型"></a>Hive 数据类型</h2><table>
+<thead>
+<tr>
+<th align="center">Hive 数据类型</th>
+<th align="center">Java 数据类型</th>
+<th align="center">长度</th>
+<th align="center">例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">TINYINT</td>
+<td align="center">byte</td>
+<td align="center">1byte 有符号整数</td>
+<td align="center">20</td>
+</tr>
+<tr>
+<td align="center">SMALINT</td>
+<td align="center">short</td>
+<td align="center">2byte 有符号整数</td>
+<td align="center">20</td>
+</tr>
+<tr>
+<td align="center">INT</td>
+<td align="center">int</td>
+<td align="center">4byte 有符号整数</td>
+<td align="center">20</td>
+</tr>
+<tr>
+<td align="center">BIGINT</td>
+<td align="center">long</td>
+<td align="center">8byte 有符号整数</td>
+<td align="center">20</td>
+</tr>
+<tr>
+<td align="center">BOOLEAN</td>
+<td align="center">boolean</td>
+<td align="center">布尔类型，true 或者 false</td>
+<td align="center">true</td>
+</tr>
+<tr>
+<td align="center">FLOAT</td>
+<td align="center">float</td>
+<td align="center">单精度浮点数</td>
+<td align="center">3.14</td>
+</tr>
+<tr>
+<td align="center">DOUBLE</td>
+<td align="center">double</td>
+<td align="center">双精度浮点数</td>
+<td align="center">3.1415</td>
+</tr>
+<tr>
+<td align="center">STRING</td>
+<td align="center">String</td>
+<td align="center">字符系列。</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">TIMESTAMP</td>
+<td align="center"></td>
+<td align="center">时间类型</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">BINARY</td>
+<td align="center"></td>
+<td align="center">字节数组</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>集合数据类型</p>
+<table>
+<thead>
+<tr>
+<th align="center">数据类型</th>
+<th align="left">描述</th>
+<th align="center">语法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">STRUCT</td>
+<td align="left">和 c 语言中的 struct 类似，都可以通过“点”符号访问元素内容。例如，如果某个列的数据类型是 STRUCT{first STRING, last STRING},那么第 1 个元素可以通过字段.first 来引用。</td>
+<td align="center">struct()例如 struct&lt;street: string&gt;</td>
+</tr>
+<tr>
+<td align="center">MAP</td>
+<td align="left">MAP 是一组键-值对元组集合，使用数组表示法可以访问数据。例如，如果某个列的数据类型是 MAP，其中键-&gt;值对是’first’-&gt;’John’和’last’-&gt;’Doe’，那么可以通过字段名[‘last’]获取最后一个元素</td>
+<td align="center">map()例如 map&lt;string,int&gt;</td>
+</tr>
+<tr>
+<td align="center">ARRAY</td>
+<td align="left">数组是一组具有相同类型和名称的变量的集合。这些变量称为数组的元素，每个数组元素都有一个编号，编号从零开始。例如，数组值为[‘John’, ‘Doe’]，那么第 2 个元素可以通过数组名[1]进行引用。</td>
+<td align="center">Array()例如 array<string></td>
+</tr>
+</tbody></table>
+<p>Hive 有三种复杂数据类型 ARRAY、MAP 和 STRUCT。ARRAY 和 MAP 与 Java 中的 Array和 Map 类似，而 STRUCT 与 C 语言中的 Struct 类似，它封装了一个命名字段集合，复杂数据类型允许任意层次的嵌套。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line"> <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;songsong&quot;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;friends&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;bingbing&quot;</span> <span class="punctuation">,</span> <span class="string">&quot;lili&quot;</span><span class="punctuation">]</span> <span class="punctuation">,</span> </span><br><span class="line"> <span class="attr">&quot;children&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span> </span><br><span class="line"> <span class="attr">&quot;xiao song&quot;</span><span class="punctuation">:</span> <span class="number">18</span> <span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;xiaoxiao song&quot;</span><span class="punctuation">:</span> <span class="number">19</span></span><br><span class="line"> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;address&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span> </span><br><span class="line"> <span class="attr">&quot;street&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hui long guan&quot;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;city&quot;</span><span class="punctuation">:</span> <span class="string">&quot;beijing&quot;</span></span><br><span class="line"> <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>一个复杂的数据结构他的切分应该按照如何切分，包括字段与字段之间的切分，数组之间的切分，k-v之间的切分。</p>
+<p>数据</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">songsong,bingbing_lili,xiao song:18_xiaoxiao song:19,hui long guan_beijing</span><br><span class="line">yangyang,caicai_susu,xiao yang:18_xiaoxiao yang:19,chao yang_beijing</span><br></pre></td></tr></table></figure>
+
+<p>建表语句</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">create table test(</span><br><span class="line">name string,</span><br><span class="line">friends array&lt;string&gt;,</span><br><span class="line">children map&lt;string, int&gt;,</span><br><span class="line">address struct&lt;street:string, city:string&gt;</span><br><span class="line">)</span><br><span class="line">row format delimited fields terminated by &#x27;,&#x27;</span><br><span class="line">collection items terminated by &#x27;_&#x27;</span><br><span class="line">map keys terminated by &#x27;:&#x27;</span><br><span class="line">lines terminated by &#x27;\n&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>字段解释：<br>row format delimited fields terminated by ‘,’ – 列分隔符<br>collection items terminated by ‘_’ –MAP STRUCT 和 ARRAY 的分隔符(数据分割符号)<br>map keys terminated by ‘:’ – MAP 中的 key 与 value 的分隔符<br>lines terminated by ‘\n’; – 行分隔符</p>
+<p>将文件上传之后执行<code>select * from test2</code></p>
+<p><img src="https://img-blog.csdnimg.cn/960dd4a201064f9ba4195956c93dd379.png" alt="在这里插入图片描述"></p>
+<p><code>select friends[1], children[&#39;xiao song&#39;], address.street from test2 where name = &#39;songsong&#39;;</code></p>
+<p><img src="https://img-blog.csdnimg.cn/a075d435b0a24e7e87562741844d18dc.png" alt="在这里插入图片描述"></p>
+<p><strong>隐式类型转换规则如下</strong></p>
+<ol>
+<li>任何整数类型都可以隐式地转换为一个范围更广的类型，如 TINYINT 可以转换成<br>INT，INT 可以转换成 BIGINT。</li>
+<li>所有整数类型、FLOAT 和 STRING 类型都可以隐式地转换成 DOUBLE。</li>
+<li>TINYINT、SMALLINT、INT 都可以转换为 FLOAT。</li>
+<li>BOOLEAN 类型不可以转换为任何其它的类型。</li>
+</ol>
+<p><strong>可以使用 CAST 操作显示进行数据类型转换</strong></p>
+<p>例如 CAST(‘1’ AS INT)将把字符串’1’ 转换成整数 1；如果强制类型转换失败，如执行 CAST(‘X’ AS INT)，表达式返回空值 NULL。</p>
+<p><img src="https://img-blog.csdnimg.cn/9c9ce282a8bb41e6b539157b7f42a92d.png" alt="在这里插入图片描述"></p>
+<h2 id="DDL-数据定义"><a href="#DDL-数据定义" class="headerlink" title="DDL 数据定义"></a>DDL 数据定义</h2><h3 id="库操作"><a href="#库操作" class="headerlink" title="库操作"></a>库操作</h3><h4 id="创建数据库"><a href="#创建数据库" class="headerlink" title="创建数据库"></a>创建数据库</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE [IF NOT EXISTS] database_name</span><br><span class="line">[COMMENT database_comment]</span><br><span class="line">[LOCATION hdfs_path]</span><br><span class="line">[WITH DBPROPERTIES (property_name=property_value, ...)];</span><br></pre></td></tr></table></figure>
+
+<p>查看默认库的创建语句 <code>show create database default</code></p>
+<p><img src="https://img-blog.csdnimg.cn/b34c7eec1b984c139f506c090f00d000.png" alt="在这里插入图片描述"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create database if not exists db_hive;</span><br></pre></td></tr></table></figure>
+
+<p>创建一个数据库，数据库在 HDFS 上的默认存储路径是 &#x2F;user&#x2F;hive&#x2F;warehouse&#x2F;*.db。</p>
+<h4 id="查看数据库详情"><a href="#查看数据库详情" class="headerlink" title="查看数据库详情"></a>查看数据库详情</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">desc database db_hive;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/b6b0d8261c2545ada7a66d8e1d3ee5d0.png" alt="在这里插入图片描述"></p>
+<h4 id="切换当前数据库"><a href="#切换当前数据库" class="headerlink" title="切换当前数据库"></a>切换当前数据库</h4><p><code>use db_hive;</code></p>
+<h4 id="删除数据库"><a href="#删除数据库" class="headerlink" title="删除数据库"></a>删除数据库</h4><p><code> drop database if exists db_hive2;</code></p>
+<p>如果数据库不为空，可以采用 cascade 命令，强制删除</p>
+<p><code> drop database db_hive cascade;</code></p>
+<h3 id="表操作"><a href="#表操作" class="headerlink" title="表操作"></a>表操作</h3><h4 id="创建表"><a href="#创建表" class="headerlink" title="创建表"></a>创建表</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> [<span class="keyword">EXTERNAL</span>] <span class="keyword">TABLE</span> [IF <span class="keyword">NOT</span> <span class="keyword">EXISTS</span>] table_name</span><br><span class="line">[(col_name data_type [COMMENT col_comment], ...)]</span><br><span class="line">[COMMENT table_comment]</span><br><span class="line">[PARTITIONED <span class="keyword">BY</span> (col_name data_type [COMMENT col_comment], ...)]</span><br><span class="line">[CLUSTERED <span class="keyword">BY</span> (col_name, col_name, ...)</span><br><span class="line">[SORTED <span class="keyword">BY</span> (col_name [<span class="keyword">ASC</span><span class="operator">|</span><span class="keyword">DESC</span>], ...)] <span class="keyword">INTO</span> num_buckets BUCKETS]</span><br><span class="line">[<span class="type">ROW</span> FORMAT row_format]</span><br><span class="line">[STORED <span class="keyword">AS</span> file_format]</span><br><span class="line">[LOCATION hdfs_path]</span><br><span class="line">[TBLPROPERTIES (property_name<span class="operator">=</span>property_value, ...)]</span><br><span class="line">[<span class="keyword">AS</span> select_statement]</span><br></pre></td></tr></table></figure>
+
+<p><strong>字段解释说明</strong></p>
+<ol>
+<li>[CREATE TABLE] 创建一个指定名字的表。如果相同名字的表已经存在，则抛出异常；用户可以用 IF NOT EXISTS 选项来忽略这个异常。</li>
+<li>[EXTERNAL] hive中表会有内外之分，关键字可以让用户创建一个外部表，在建表的同时可以指定一个指向实际数据的路径（LOCATION），在删除表的时候，内部表的元数据和数据会被一起删除，而外部表只删除元数据，不删除数据。</li>
+<li>[COMMENT]：为表和列添加注释。</li>
+<li>[PARTITIONED BY] 创建分区表。</li>
+<li>[CLUSTERED BY] 创建分桶表。</li>
+<li>[SORTED BY] 不常用，对桶中的一个或多个列另外排序。</li>
+<li>[ROW FORMAT ]<ul>
+<li>[FIELDS TERMINATED BY char ]字段分割符</li>
+<li>[COLLECTION ITEMS TERMINATED BY char] 数组分割符</li>
+<li>[MAP KEYS TERMINATED BY char] KV 分隔符</li>
+<li>[LINES TERMINATED BY char] 行分隔符</li>
+</ul>
+</li>
+<li>[STORED AS] 指定存储文件类型 默认是text</li>
+<li>[LOCATION] 指定表在HDFS的存储位置</li>
+<li>[AS] 后跟查询语句，根据查询结果创建表。</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">create table test(</span><br><span class="line">name string,</span><br><span class="line">friends array&lt;string&gt;,</span><br><span class="line">children map&lt;string, int&gt;,</span><br><span class="line">address struct&lt;street:string, city:string&gt;</span><br><span class="line">)</span><br><span class="line">row format delimited fields terminated by &#x27;,&#x27;</span><br><span class="line">collection items terminated by &#x27;_&#x27;</span><br><span class="line">map keys terminated by &#x27;:&#x27;</span><br><span class="line">lines terminated by &#x27;\n&#x27;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="内外部表"><a href="#内外部表" class="headerlink" title="内外部表"></a>内外部表</h4><p>EXTERNAL 默认创建的都是内部表即管理表。。因为这种表，Hive 会（或多或少地）控制着数据的生命周期。Hive 默认情况下会将这些表的数据存储在由配置项<code>hive.metastore.warehouse.dir</code>(例如，&#x2F;user&#x2F;hive&#x2F;warehouse)所定义的目录的子目录下。当我们删除一个管理表时，Hive 也会删除这个表中数据。管理表不适合和其他工具共享<br>数据。</p>
+<p><code>create external table test(id int);</code></p>
+<p>因为表是外部表，所以 Hive 并非认为其完全拥有这份数据。删除该表并不会删除掉这<br>份数据，不过描述表的元数据信息会被删除掉。</p>
+<p><strong>相互转换</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">desc formatted test2;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/6f585536ee0b4620b181c85eadd568c0.png" alt="在这里插入图片描述"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table test2 set tblproperties(&#x27;EXTERNAL&#x27;=&#x27;TRUE&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>TRUE 为外部表 FALSE 为内部表，(‘EXTERNAL’&#x3D;’TRUE’)和(‘EXTERNAL’&#x3D;’FALSE’)为固定写法，区分大小写！</p>
+<h4 id="修改表-重命名表"><a href="#修改表-重命名表" class="headerlink" title="修改表 - 重命名表"></a>修改表 - 重命名表</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE test RENAME TO new_test</span><br></pre></td></tr></table></figure>
+
+<p>外部表不会修改hdfs上目录的，只修改metastore 元数据的信息。内部表都会修改。</p>
+<h4 id="修改表-增加-x2F-修改-x2F-替换列信息"><a href="#修改表-增加-x2F-修改-x2F-替换列信息" class="headerlink" title="修改表 - 增加&#x2F;修改&#x2F;替换列信息"></a>修改表 - 增加&#x2F;修改&#x2F;替换列信息</h4><p><strong>更新列</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE table_name CHANGE [COLUMN] col_old_name col_new_name column_type [COMMENT col_comment] [FIRST|AFTER column_name]</span><br></pre></td></tr></table></figure>
+
+<p>修改表的列名和类型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table new_test change column id uid int;</span><br></pre></td></tr></table></figure>
+
+<p>类型不一致可能会导致更新失败，比如原本是String 类型，改成int，就会抛出异常。</p>
+<p><strong>增加和替换列</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE table_name ADD|REPLACE COLUMNS (col_name data_type [COMMENT col_comment], ...)</span><br></pre></td></tr></table></figure>
+
+<p>增加一列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table new_test add columns (name string);</span><br></pre></td></tr></table></figure>
+
+<p>替换整张表的列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table new_test replace columns (name string);</span><br></pre></td></tr></table></figure>
+
+<p>ADD 是代表新增一字段，字段位置在所有列后面(partition 列前)，REPLACE 则是表示替换表中所有字段。</p>
+<h4 id="修改表-删除表"><a href="#修改表-删除表" class="headerlink" title="修改表 - 删除表"></a>修改表 - 删除表</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">drop table test;</span><br></pre></td></tr></table></figure>
+
+<h2 id="DML数据操作"><a href="#DML数据操作" class="headerlink" title="DML数据操作"></a>DML数据操作</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" rel="tag"># 大数据</a>
+              <a href="/tags/DataWareHouse/" rel="tag"># DataWareHouse</a>
+              <a href="/tags/Hive/" rel="tag"># Hive</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/23/Hadoop/" rel="prev" title="DataWareHouse 数据仓库">
+      <i class="fa fa-chevron-left"></i> DataWareHouse 数据仓库
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/03/18/mysql/" rel="next" title="MySQL  从入门到入土">
+      MySQL  从入门到入土 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hive"><span class="nav-number">1.</span> <span class="nav-text">Hive</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive-%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">Hive 基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Hive"><span class="nav-number">1.1.1.</span> <span class="nav-text">什么是 Hive</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hive-%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.2.</span> <span class="nav-text">Hive 的优缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hive-%E6%9E%B6%E6%9E%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.3.</span> <span class="nav-text">Hive 架构原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1%EF%BC%8E%E7%94%A8%E6%88%B7%E6%8E%A5%E5%8F%A3%EF%BC%9AClient"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">1．用户接口：Client</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2%EF%BC%8E%E5%85%83%E6%95%B0%E6%8D%AE%EF%BC%9AMetastore"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">2．元数据：Metastore</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3%EF%BC%8E%E9%A9%B1%E5%8A%A8%E5%99%A8%EF%BC%9ADriver"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">3．驱动器：Driver</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive-%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">Hive 安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85hive"><span class="nav-number">1.2.1.</span> <span class="nav-text">安装hive</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hive-%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.2.</span> <span class="nav-text">Hive 简单使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mysql-%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.3.</span> <span class="nav-text">Mysql 安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEHive-metastore"><span class="nav-number">1.2.4.</span> <span class="nav-text">配置Hive metastore</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%85%83%E6%95%B0%E6%8D%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E6%96%B9%E5%BC%8F%E8%AE%BF%E9%97%AE-Hive"><span class="nav-number">1.2.5.</span> <span class="nav-text">使用元数据服务的方式访问 Hive</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-JDBC-%E6%96%B9%E5%BC%8F%E8%AE%BF%E9%97%AE-Hive"><span class="nav-number">1.2.6.</span> <span class="nav-text">使用 JDBC 方式访问 Hive</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC%E5%B0%81%E8%A3%85"><span class="nav-number">1.2.7.</span> <span class="nav-text">脚本封装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.3.</span> <span class="nav-text">Hive 数据类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DDL-%E6%95%B0%E6%8D%AE%E5%AE%9A%E4%B9%89"><span class="nav-number">1.4.</span> <span class="nav-text">DDL 数据定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%93%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.1.</span> <span class="nav-text">库操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">创建数据库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AF%A6%E6%83%85"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">查看数据库详情</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E5%BD%93%E5%89%8D%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">切换当前数据库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.4.1.4.</span> <span class="nav-text">删除数据库</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.</span> <span class="nav-text">表操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%A1%A8"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">创建表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%A4%96%E9%83%A8%E8%A1%A8"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">内外部表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E8%A1%A8-%E9%87%8D%E5%91%BD%E5%90%8D%E8%A1%A8"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">修改表 - 重命名表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E8%A1%A8-%E5%A2%9E%E5%8A%A0-x2F-%E4%BF%AE%E6%94%B9-x2F-%E6%9B%BF%E6%8D%A2%E5%88%97%E4%BF%A1%E6%81%AF"><span class="nav-number">1.4.2.4.</span> <span class="nav-text">修改表 - 增加&#x2F;修改&#x2F;替换列信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E8%A1%A8-%E5%88%A0%E9%99%A4%E8%A1%A8"><span class="nav-number">1.4.2.5.</span> <span class="nav-text">修改表 - 删除表</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DML%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C"><span class="nav-number">1.5.</span> <span class="nav-text">DML数据操作</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Laoshiren</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Laoshiren</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

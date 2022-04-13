@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"laoshiren1207.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[架构]MPP架构优点  传统数仓常见的随机数架构，将单机数据库节点组成集群，提升性能 节点间为非共享架构（Share Noting），没个节点都有独立的磁盘存储系统和内存系统 每台数据通过专用网络或者商业通用网络互相连接，彼此协同计算，作为整体提供服务 设计上优先考虑C 其实A P   MPP架构缺点  存储位置不透明，通过hash确定数据所在物理节点，查询任务在所有节点均会执行 并行计算式，单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DataWareHouse 数据仓库">
+<meta property="og:url" content="https://laoshiren1207.github.io/2021/11/29/DataWareHouse/index.html">
+<meta property="og:site_name" content="LaoShiRen1207">
+<meta property="og:description" content="[架构]MPP架构优点  传统数仓常见的随机数架构，将单机数据库节点组成集群，提升性能 节点间为非共享架构（Share Noting），没个节点都有独立的磁盘存储系统和内存系统 每台数据通过专用网络或者商业通用网络互相连接，彼此协同计算，作为整体提供服务 设计上优先考虑C 其实A P   MPP架构缺点  存储位置不透明，通过hash确定数据所在物理节点，查询任务在所有节点均会执行 并行计算式，单">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/113780f4e7044d648dacb5fc005d63e2.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0f00d56c5fff436b91fc36547d960020.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e7293ffd698b480186ff5d2c6f048590.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a505e2a03b8a4001b090529d006ebd14.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/7cd52e8672e9484ab2de97ef8708fc4e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/136bd8990bb24d9b81490c6e047d9693.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ec19d78275934cf1ad0b53abb05431a6.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/71025049edc345978db966b80da277d9.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b229d41c9b9d4e089980e43cb8e40bf7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fab0230b7eec46218a6b106ba607c974.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/deebdebccc254795871bedf1a0518e8a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/4e04ad43a9d74e2a87cedfcad9a089d5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/62dd29869efb465d9dfb3536642a5334.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a280eaf339194a5ba8e2ce15714389b0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a85265ef3c674108974797e33d7b19e2.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/73e49bb4c69c466ca159a52b63c208f1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/40d30b19f01d4793a4d8d2fe7507d172.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0a5f8f81157c470f8bd3edb8b7411e1d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/af32254bc744413a856e24c540d25a19.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/73f806f189b44104baf22b190b605a8a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9aeb38083377422b91792bdb292ce723.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/47910569e2954f01a99355e550f42410.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/1750424c85744fba845ce4d687f009ae.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c48dd9a3619a4a25bcd5ec1ed7756b9f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/7fff73ab9de240a4a37aea8d0c106fe7.png">
+<meta property="article:published_time" content="2021-11-29T07:13:20.000Z">
+<meta property="article:modified_time" content="2022-04-13T07:15:02.223Z">
+<meta property="article:author" content="Laoshiren">
+<meta property="article:tag" content="大数据">
+<meta property="article:tag" content="DataWareHouse">
+<meta property="article:tag" content="MPP">
+<meta property="article:tag" content="HDFS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/113780f4e7044d648dacb5fc005d63e2.png">
+
+<link rel="canonical" href="https://laoshiren1207.github.io/2021/11/29/DataWareHouse/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>DataWareHouse 数据仓库 | LaoShiRen1207</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">LaoShiRen1207</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天下有太多难学的技术</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://laoshiren1207.github.io/2021/11/29/DataWareHouse/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Laoshiren">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LaoShiRen1207">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DataWareHouse 数据仓库
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-11-29 15:13:20" itemprop="dateCreated datePublished" datetime="2021-11-29T15:13:20+08:00">2021-11-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-13 15:15:02" itemprop="dateModified" datetime="2022-04-13T15:15:02+08:00">2022-04-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/" itemprop="url" rel="index"><span itemprop="name">大数据</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/DataWareHouse/" itemprop="url" rel="index"><span itemprop="name">DataWareHouse</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="架构"><a href="#架构" class="headerlink" title="[架构]"></a>[架构]</h2><p>MPP架构优点</p>
+<ol>
+<li>传统数仓常见的随机数架构，将单机数据库节点组成集群，提升性能</li>
+<li>节点间为非共享架构（Share Noting），没个节点都有独立的磁盘存储系统和内存系统</li>
+<li>每台数据通过专用网络或者商业通用网络互相连接，彼此协同计算，作为整体提供服务</li>
+<li>设计上优先考虑C 其实A P</li>
+</ol>
+<p><img src="https://img-blog.csdnimg.cn/113780f4e7044d648dacb5fc005d63e2.png"></p>
+<p>MPP架构缺点</p>
+<ol>
+<li>存储位置不透明，通过hash确定数据所在物理节点，查询任务在所有节点均会执行</li>
+<li>并行计算式，单节点瓶颈会成为整个系统短板，容错性差</li>
+<li>分布式事务的实现会导致扩展性降低</li>
+</ol>
+<p>分布式架构（Hadoop 架构）</p>
+<ol>
+<li>各节点实现场地自治（可以单独运行局部应用），数据在及群众全局透明共享</li>
+<li>每个节点通过局域网连接，节点间的通信开销较大，运算时致力减少数据移动</li>
+<li>有效考虑分区容错 然后是A C</li>
+</ol>
+<p>MPP + 分布式架构</p>
+<ol>
+<li>数据存储采用分布式架构中的公共存储，提高分区容错</li>
+<li>上层架构采用MPP，减少运算延迟</li>
+</ol>
+<h3 id="通用架构"><a href="#通用架构" class="headerlink" title="通用架构"></a>通用架构</h3><p><img src="https://img-blog.csdnimg.cn/0f00d56c5fff436b91fc36547d960020.png"></p>
+<p>ETL（Extract-Transform-Load）数据同步模块，将业务数据抽酒进行交互转换清洗，标准化。</p>
+<p>ODS 存储清洗过后的原始数据（不允许修改，保证数据一致）</p>
+<p>CDM </p>
+<p>DWD 数据明细</p>
+<p>DWS 数据汇总（宽表，提升数据分析）</p>
+<p>ADS 数据应用</p>
+<h3 id="ETL流程"><a href="#ETL流程" class="headerlink" title="ETL流程"></a>ETL流程</h3><h4 id="Extract-Transform-Load"><a href="#Extract-Transform-Load" class="headerlink" title="Extract-Transform-Load"></a>Extract-Transform-Load</h4><ul>
+<li>将数据从来源段经过抽取，交互转换，加载至目的端的过程</li>
+<li>构建数据仓库的重要一环，用户从数据源抽取所需的数据，经过数据清洗，最终按照预先定义好的数据仓库模型，将数据加载到数据仓库中。</li>
+</ul>
+<h4 id="数据抽取-Extraction"><a href="#数据抽取-Extraction" class="headerlink" title="数据抽取[Extraction]"></a>数据抽取[Extraction]</h4><ul>
+<li>抽取的数据源可分为结构化、非结构化数据、半结构化数据</li>
+<li>结构化的数据一般采用JDBC、数据库日志的方式，非|半结构化的数据会监听文件变动</li>
+</ul>
+<h4 id="抽取方式"><a href="#抽取方式" class="headerlink" title="抽取方式"></a>抽取方式</h4><ul>
+<li>数据抽取方式有全量同步、增量同步两种方式</li>
+<li>全量同步会将全部数据进行抽取，一般用于初始化数据装载</li>
+<li>增量同步方式会检测数据的变动，抽取发生变动的数据，一般用于数据更新</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/e7293ffd698b480186ff5d2c6f048590.png"></p>
+<h4 id="数据转换-Transformation"><a href="#数据转换-Transformation" class="headerlink" title="数据转换[Transformation]"></a>数据转换[Transformation]</h4><ul>
+<li>数据转换姚经理数据清洗和转换两个阶段<ul>
+<li>数据清洗主要是对出现的重复、二义性、不完整、违反业务或者逻辑规则等问题的数据进行统一的处理</li>
+<li>数据转换主要是对数据进行标准化处理，进行字段、数据类型、数据定义的转换</li>
+</ul>
+</li>
+<li>结构化数据在转换过程中的逻辑较为简单，非|半结构化的数据转换较为复杂</li>
+</ul>
+<h4 id="数据加载-Loading"><a href="#数据加载-Loading" class="headerlink" title="数据加载[Loading]"></a>数据加载[Loading]</h4><ul>
+<li>将最后处理完的数据导入到对应的目标源里</li>
+</ul>
+<p>结构化数据ETL工具：<code>Sqoop</code> <code>Kettle</code></p>
+<p>半|非结构化数据ETL工具：<code>Flume</code> <code>Logstash</code></p>
+<h3 id="数据积存-ODS"><a href="#数据积存-ODS" class="headerlink" title="数据积存 ODS"></a>数据积存 ODS</h3><h4 id="操作数据层-ODS"><a href="#操作数据层-ODS" class="headerlink" title="操作数据层[ODS]"></a>操作数据层[ODS]</h4><ul>
+<li>数据与原业务数据保持一致，可以增加字段用来进行数据管理（扩充集）</li>
+<li>存储的历史数据是只读的，提供业务系统查询使用</li>
+<li>业务系统对历史数据完成修改后，将update_type字段更新为UPDATE，追加回ODS中</li>
+</ul>
+<blockquote>
+<p>比如业务系统需要对N年前的数据进行修改，那ODS层提供了查询功能，业务系统修改数据后，发现ODS层数据不能被修改。</p>
+<p>所以业务系统只能将查询的出来的数据追加到ODS层将update_type修改为UPDATE，然后将历史数据删除，保证数据仓库最新的时效性</p>
+</blockquote>
+<p><img src="https://img-blog.csdnimg.cn/a505e2a03b8a4001b090529d006ebd14.png"></p>
+<ul>
+<li>在离线数据中，业务数据定期通过ETL流程导入到ODS中，导入的方式也有全量、增量两种<ul>
+<li>全量导入：数据第一次导入时，选择此种方式</li>
+<li>增量导入：数据非第一次导入是，每次只需要导入新增、修改的数据，建议使用外连接&amp;全覆盖</li>
+</ul>
+</li>
+</ul>
+<h3 id="数据分析-DWD-DWS-ADS"><a href="#数据分析-DWD-DWS-ADS" class="headerlink" title="数据分析 DWD DWS ADS"></a>数据分析 DWD DWS ADS</h3><h4 id="数据明细层-DWD"><a href="#数据明细层-DWD" class="headerlink" title="数据明细层[DWD]"></a>数据明细层[DWD]</h4><ul>
+<li>数明细层对ODS层的数据进行清洗、标准化、维度退化（时间、分类、地域）</li>
+<li>数据仍然班组3NF模型，为分析运算做准备</li>
+</ul>
+<p>维度退化(多张表合并成一张表)</p>
+<p><img src="https://img-blog.csdnimg.cn/7cd52e8672e9484ab2de97ef8708fc4e.png"></p>
+<h4 id="数据汇总层-DWS"><a href="#数据汇总层-DWS" class="headerlink" title="数据汇总层[DWS]"></a>数据汇总层[DWS]</h4><ul>
+<li>数据汇总层的数据对数据明细层的数据，按照分析主题镜像计算汇总，存放便于分析的宽表</li>
+<li>存储模型并非3NF，而是注重数据聚合，复杂查询、性能处理更优的数仓模型</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/136bd8990bb24d9b81490c6e047d9693.png" alt="在这里插入图片描述"></p>
+<p>DWS层应该包含模型和基于模型汇总的数据</p>
+<h4 id="数据应用层-ADS"><a href="#数据应用层-ADS" class="headerlink" title="数据应用层[ADS]"></a>数据应用层[ADS]</h4><ul>
+<li>数据应用层也被称为数据集市</li>
+<li>存储数据分析结果，为不用业务场景提供接口，减轻数据仓库的负<ul>
+<li>数据仓库擅长数据分析，直接方法业务查询结构，会加重其负担</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/ec19d78275934cf1ad0b53abb05431a6.png" alt="在这里插入图片描述"></p>
+<h2 id="建模"><a href="#建模" class="headerlink" title="[建模]"></a>[建模]</h2><h3 id="OLTP，OLAP"><a href="#OLTP，OLAP" class="headerlink" title="OLTP，OLAP"></a>OLTP，OLAP</h3><h4 id="OLTP系统建模方法"><a href="#OLTP系统建模方法" class="headerlink" title="OLTP系统建模方法"></a>OLTP系统建模方法</h4><p>OLTP（在线事务处理）系统中，主要操作是随机读写</p>
+<ul>
+<li>为了保证数据一致性、减少冗余，尝试用关系模型</li>
+<li>在关系模型中，使用三范式规则来减少冗余</li>
+</ul>
+<h4 id="OLAP"><a href="#OLAP" class="headerlink" title="OLAP"></a>OLAP</h4><p>OLAP系统中，主要操作是复杂分析查询，关注数据整合，以及分析、处理性能。根据存储的方式不同，又可以分为ROLAP，MOLAP和HOLAP</p>
+<ul>
+<li>ROLAP（Relation OLAP，关系型OLAP）：使用关系模型构建，存储系统一般为RDBMS</li>
+<li>MOLAP（Multidimensional OLAP，多维度OLAP）：预先聚合计算，使用多维度数组的形式保存数据结果，加快查询分析时间</li>
+<li>HOLAP（Hybrid OLAP，混合架构的OLAP）：ROLAP和MOLAP两者的继承，如底层是关系型，高层是多维矩阵型；查询高于ROLAP，低于MOLAP</li>
+</ul>
+<h3 id="ROLAP，MOLAP建模理论"><a href="#ROLAP，MOLAP建模理论" class="headerlink" title="ROLAP，MOLAP建模理论"></a>ROLAP，MOLAP建模理论</h3><h4 id="ROLAP系统建模方法"><a href="#ROLAP系统建模方法" class="headerlink" title="ROLAP系统建模方法"></a>ROLAP系统建模方法</h4><p>典型的数仓建方法有ER模型，维度模型，DataValue，Anchor（维度模型适合频繁变动的业务）</p>
+<p><img src="https://img-blog.csdnimg.cn/71025049edc345978db966b80da277d9.png" alt="在这里插入图片描述"></p>
+<h5 id="维度模型"><a href="#维度模型" class="headerlink" title="维度模型"></a>维度模型</h5><ul>
+<li>维度模型中，表被分为维度表、事实表，维度是对事实的一种组织</li>
+<li>维度一般包含分类、时间、地域</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/b229d41c9b9d4e089980e43cb8e40bf7.png" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/fab0230b7eec46218a6b106ba607c974.png" alt="在这里插入图片描述"></p>
+<blockquote>
+<p>中间的订单就是事实表，旁边围绕的就是维度表</p>
+<p>建立好维度表后，可以根据不同的维度进行分析，比如地区，年份的分析</p>
+</blockquote>
+<p>维度模型分为星型模型、雪花模型、星座模型，模型建立后方便对数据进行多维分析。 </p>
+<h5 id="星型模型"><a href="#星型模型" class="headerlink" title="星型模型"></a>星型模型</h5><p>标准的星型模型，维度只有一层，性能分析最优</p>
+<p><img src="https://img-blog.csdnimg.cn/deebdebccc254795871bedf1a0518e8a.png" alt="在这里插入图片描述"></p>
+<h5 id="雪花模型"><a href="#雪花模型" class="headerlink" title="雪花模型"></a>雪花模型</h5><p>雪花模型具有多层维度，比较接近3NF，较为灵活</p>
+<p><img src="https://img-blog.csdnimg.cn/4e04ad43a9d74e2a87cedfcad9a089d5.png" alt="在这里插入图片描述"></p>
+<h5 id="星座模型"><a href="#星座模型" class="headerlink" title="星座模型"></a>星座模型</h5><ul>
+<li>星座模型基于多个事实表，事实表之间会共享一些维度表</li>
+<li>是大型数据仓库中的常态，是业务增长的结果，与模型设计无关</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/62dd29869efb465d9dfb3536642a5334.png" alt="在这里插入图片描述"></p>
+<h5 id="宽表模型"><a href="#宽表模型" class="headerlink" title="宽表模型"></a>宽表模型</h5><ul>
+<li>宽表模型是维度模型的衍生，适合Join性能不佳的数据仓库产品</li>
+<li>宽表模型将维度冗余到事实表中，形成宽表，以此减少Join操作</li>
+</ul>
+<img src="https://img-blog.csdnimg.cn/a280eaf339194a5ba8e2ce15714389b0.png" alt="在这里插入图片描述" style="zoom:50%;" />
+
+<h4 id="MOLAP系统建模方式"><a href="#MOLAP系统建模方式" class="headerlink" title="MOLAP系统建模方式"></a>MOLAP系统建模方式</h4><ul>
+<li>MOLAP将数据进行预结算，并将聚合结果存储到CUBE模型中</li>
+<li>CUBE 模型以多维数组的形式，物化到存储系统中，加快后续的查询</li>
+<li>生成CUBE需要大量的时间、空间，维度预处理可能为导致数据膨胀</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/a85265ef3c674108974797e33d7b19e2.png" alt="在这里插入图片描述"></p>
+<p>常见MOLAP产品：<code>Kylin</code>，<code>Druid</code></p>
+<h3 id="多维分析"><a href="#多维分析" class="headerlink" title="多维分析"></a>多维分析</h3><ul>
+<li>OLAP主要操作是复杂查询，可以多表关联，使用COUNT，SUM，AVG等聚合函数</li>
+<li>OLAP对复杂查询操作做了直观的定义，包括钻取、切片、切块、旋转。</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/73e49bb4c69c466ca159a52b63c208f1.png" alt="在这里插入图片描述"></p>
+<h4 id="钻取"><a href="#钻取" class="headerlink" title="[钻取]"></a>[钻取]</h4><ul>
+<li>对维度不同次的分析，通过改变维度的层次来变换分析的粒度</li>
+<li>钻取包括上卷，下钻</li>
+</ul>
+<p>上卷（Roll-up）也称为向上钻取，指从低层次到高层次的切换</p>
+<p>下钻（Drill-down），指从高层次到低层次的切换</p>
+<p><img src="https://img-blog.csdnimg.cn/40d30b19f01d4793a4d8d2fe7507d172.png" alt="在这里插入图片描述"></p>
+<h4 id="切片，切块"><a href="#切片，切块" class="headerlink" title="[切片，切块]"></a>[切片，切块]</h4><p>选择某个维度进行分割称为切片</p>
+<p>按照多维进行的切片称为切块</p>
+<p><img src="https://img-blog.csdnimg.cn/0a5f8f81157c470f8bd3edb8b7411e1d.png" alt="在这里插入图片描述"></p>
+<h4 id="旋转"><a href="#旋转" class="headerlink" title="[旋转]"></a>[旋转]</h4><p>对维度方向的转换，类似交换坐标轴上卷</p>
+<p><img src="https://img-blog.csdnimg.cn/af32254bc744413a856e24c540d25a19.png" alt="在这里插入图片描述"></p>
+<h2 id="最佳实践"><a href="#最佳实践" class="headerlink" title="[最佳实践]"></a>[最佳实践]</h2><h3 id="数据仓库表类型"><a href="#数据仓库表类型" class="headerlink" title="数据仓库表类型"></a>数据仓库表类型</h3><h4 id="维度建模中的表分类"><a href="#维度建模中的表分类" class="headerlink" title="维度建模中的表分类"></a>维度建模中的表分类</h4><ul>
+<li>事实表</li>
+<li>维度表</li>
+<li>事务事实表</li>
+<li>周期快照事实表</li>
+<li>累计快照事实表</li>
+</ul>
+<h5 id="事实表"><a href="#事实表" class="headerlink" title="事实表"></a>事实表</h5><p>一般是指一个现实存在的业务对象，比如用户，商品，商家，销售员等</p>
+<p><img src="https://img-blog.csdnimg.cn/73f806f189b44104baf22b190b605a8a.png" alt="在这里插入图片描述"></p>
+<h5 id="维度表"><a href="#维度表" class="headerlink" title="维度表"></a>维度表</h5><p>一般是指对应一些业务状态，代码的解释表。通常使用维度对事实表中的数据进行统计，聚合运算</p>
+<p><img src="https://img-blog.csdnimg.cn/9aeb38083377422b91792bdb292ce723.png" alt="在这里插入图片描述"></p>
+<h5 id="事务事实表"><a href="#事务事实表" class="headerlink" title="事务事实表"></a>事务事实表</h5><p>随着业务不断产生的数据，一旦生产不再会发生变化，比如交易流水，操作日志，出库入库记录<br><img src="https://img-blog.csdnimg.cn/47910569e2954f01a99355e550f42410.png" alt="在这里插入图片描述"></p>
+<h5 id="周期事实表"><a href="#周期事实表" class="headerlink" title="周期事实表"></a>周期事实表</h5><ul>
+<li>随着业务周期型的推荐而变化，完成建个周期内的度量统计，如年，季度累计。</li>
+<li>使用周期+状态度量的组合，如年累计订单数量。</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/1750424c85744fba845ce4d687f009ae.png" alt="在这里插入图片描述"></p>
+<h5 id="累计快照事实表"><a href="#累计快照事实表" class="headerlink" title="累计快照事实表"></a>累计快照事实表</h5><p>记录不确定周期的度量统计，完全覆盖一个事实的生命周期，如订单状态，通常有多个时间字段记录生命周期的关键时间点，只有<strong>一条记录</strong>针对此记录不断更新</p>
+<p><img src="https://img-blog.csdnimg.cn/c48dd9a3619a4a25bcd5ec1ed7756b9f.png" alt="在这里插入图片描述"></p>
+<blockquote>
+<p><strong>实现方式一</strong></p>
+<ul>
+<li>使用日期分区表，全量记录数据，每天的分区存储全量数据与当天增量数据合并的结果</li>
+<li>数据量大会导致全量表膨胀，存储大量永远不更新的冷数据，对性能影响较大</li>
+<li>适用于数据量少的情况</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>实现方式二</strong></p>
+<ul>
+<li>使用日期分区表，推测数据最长的生命周期，存储周期内数据，周期外的类数据存储到归档表</li>
+<li>需要保留多天的分区数据，存储消耗依然很大</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>实现方式三</strong></p>
+<ul>
+<li>使用日期分区表，以业务实体结束的时间分区，每天分区存放当天结束的数据；设计一个时间非常大的分区</li>
+<li>已结束的数据存放到相对应的分区，未结束的数据分区，数据量也不会很大，ETL性能好</li>
+<li>无存储浪费，数据全局唯一</li>
+<li>业务系统可能无法表示业务实体的结束时间，可以用奇台相关业务系统的结束标志作为此业务系统的结束，业务以使用最长生命周期时间或者前端系统的数据归档时间</li>
+</ul>
+</blockquote>
+<h5 id="拉链表"><a href="#拉链表" class="headerlink" title="拉链表"></a>拉链表</h5><p>拉链表记录每条信息的生命周期，用于保存历史数据的所有（变更）状态，拉链表将表数据的随机修改方式变城顺序追加</p>
+<p><img src="https://img-blog.csdnimg.cn/7fff73ab9de240a4a37aea8d0c106fe7.png" alt="在这里插入图片描述"></p>
+<h3 id="ETL策略"><a href="#ETL策略" class="headerlink" title="ETL策略"></a>ETL策略</h3><p><strong>[全量同步]</strong></p>
+<p>数据初始化装在一定使用全量同步的方式，因为业务技术原因，使用全量同步的方式做周期数据更新，直接覆盖原有数据即可。</p>
+<p><strong>[增量同步]</strong></p>
+<p>传统数据整合方案中，大多采用merge方式，主流大数据平台不支持update操作，可采用全外连接覆盖方式，如果担心数据更新出错，可采用分区方式，每天保证最小的全量版本，保存较短周期。</p>
+<h3 id="任务调度"><a href="#任务调度" class="headerlink" title="任务调度"></a>任务调度</h3><p>为什么需要任务调度</p>
+<ul>
+<li>解决任务单元间的依赖关系</li>
+<li>自动化完成任务的定时执行</li>
+</ul>
+<h4 id="常见任务类型"><a href="#常见任务类型" class="headerlink" title="常见任务类型"></a>常见任务类型</h4><p>shell， Java程序，MapReduce程序，sql脚本</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" rel="tag"># 大数据</a>
+              <a href="/tags/DataWareHouse/" rel="tag"># DataWareHouse</a>
+              <a href="/tags/MPP/" rel="tag"># MPP</a>
+              <a href="/tags/HDFS/" rel="tag"># HDFS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/01/ElasticSearch/" rel="prev" title="高效搜索 Elastic Search 7.6.2">
+      <i class="fa fa-chevron-left"></i> 高效搜索 Elastic Search 7.6.2
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/12/23/Hadoop/" rel="next" title="DataWareHouse 数据仓库">
+      DataWareHouse 数据仓库 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">[架构]</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">通用架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ETL%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">ETL流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Extract-Transform-Load"><span class="nav-number">1.2.1.</span> <span class="nav-text">Extract-Transform-Load</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8A%BD%E5%8F%96-Extraction"><span class="nav-number">1.2.2.</span> <span class="nav-text">数据抽取[Extraction]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%BD%E5%8F%96%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.3.</span> <span class="nav-text">抽取方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2-Transformation"><span class="nav-number">1.2.4.</span> <span class="nav-text">数据转换[Transformation]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%8A%A0%E8%BD%BD-Loading"><span class="nav-number">1.2.5.</span> <span class="nav-text">数据加载[Loading]</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%A7%AF%E5%AD%98-ODS"><span class="nav-number">1.3.</span> <span class="nav-text">数据积存 ODS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E6%95%B0%E6%8D%AE%E5%B1%82-ODS"><span class="nav-number">1.3.1.</span> <span class="nav-text">操作数据层[ODS]</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90-DWD-DWS-ADS"><span class="nav-number">1.4.</span> <span class="nav-text">数据分析 DWD DWS ADS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%98%8E%E7%BB%86%E5%B1%82-DWD"><span class="nav-number">1.4.1.</span> <span class="nav-text">数据明细层[DWD]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%B1%87%E6%80%BB%E5%B1%82-DWS"><span class="nav-number">1.4.2.</span> <span class="nav-text">数据汇总层[DWS]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%94%E7%94%A8%E5%B1%82-ADS"><span class="nav-number">1.4.3.</span> <span class="nav-text">数据应用层[ADS]</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%BA%E6%A8%A1"><span class="nav-number">2.</span> <span class="nav-text">[建模]</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OLTP%EF%BC%8COLAP"><span class="nav-number">2.1.</span> <span class="nav-text">OLTP，OLAP</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OLTP%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1%E6%96%B9%E6%B3%95"><span class="nav-number">2.1.1.</span> <span class="nav-text">OLTP系统建模方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OLAP"><span class="nav-number">2.1.2.</span> <span class="nav-text">OLAP</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ROLAP%EF%BC%8CMOLAP%E5%BB%BA%E6%A8%A1%E7%90%86%E8%AE%BA"><span class="nav-number">2.2.</span> <span class="nav-text">ROLAP，MOLAP建模理论</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ROLAP%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">ROLAP系统建模方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%B4%E5%BA%A6%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">维度模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%98%9F%E5%9E%8B%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">星型模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%9B%AA%E8%8A%B1%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.1.3.</span> <span class="nav-text">雪花模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%98%9F%E5%BA%A7%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.1.4.</span> <span class="nav-text">星座模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%BD%E8%A1%A8%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.1.5.</span> <span class="nav-text">宽表模型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MOLAP%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.2.</span> <span class="nav-text">MOLAP系统建模方式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E7%BB%B4%E5%88%86%E6%9E%90"><span class="nav-number">2.3.</span> <span class="nav-text">多维分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%92%BB%E5%8F%96"><span class="nav-number">2.3.1.</span> <span class="nav-text">[钻取]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%87%E7%89%87%EF%BC%8C%E5%88%87%E5%9D%97"><span class="nav-number">2.3.2.</span> <span class="nav-text">[切片，切块]</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%8B%E8%BD%AC"><span class="nav-number">2.3.3.</span> <span class="nav-text">[旋转]</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">[最佳实践]</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E8%A1%A8%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text">数据仓库表类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%B4%E5%BA%A6%E5%BB%BA%E6%A8%A1%E4%B8%AD%E7%9A%84%E8%A1%A8%E5%88%86%E7%B1%BB"><span class="nav-number">3.1.1.</span> <span class="nav-text">维度建模中的表分类</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8B%E5%AE%9E%E8%A1%A8"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">事实表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%B4%E5%BA%A6%E8%A1%A8"><span class="nav-number">3.1.1.2.</span> <span class="nav-text">维度表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E4%BA%8B%E5%AE%9E%E8%A1%A8"><span class="nav-number">3.1.1.3.</span> <span class="nav-text">事务事实表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%91%A8%E6%9C%9F%E4%BA%8B%E5%AE%9E%E8%A1%A8"><span class="nav-number">3.1.1.4.</span> <span class="nav-text">周期事实表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%B4%AF%E8%AE%A1%E5%BF%AB%E7%85%A7%E4%BA%8B%E5%AE%9E%E8%A1%A8"><span class="nav-number">3.1.1.5.</span> <span class="nav-text">累计快照事实表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8B%89%E9%93%BE%E8%A1%A8"><span class="nav-number">3.1.1.6.</span> <span class="nav-text">拉链表</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ETL%E7%AD%96%E7%95%A5"><span class="nav-number">3.2.</span> <span class="nav-text">ETL策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6"><span class="nav-number">3.3.</span> <span class="nav-text">任务调度</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E4%BB%BB%E5%8A%A1%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.3.1.</span> <span class="nav-text">常见任务类型</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Laoshiren</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Laoshiren</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

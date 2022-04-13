@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"laoshiren1207.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="消息队列可以理解为一种在TCP协议之上构建的一个简单的协议">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列 【RabbitMQ】">
+<meta property="og:url" content="https://laoshiren1207.github.io/2022/10/10/RabbitMq/index.html">
+<meta property="og:site_name" content="LaoShiRen1207">
+<meta property="og:description" content="消息队列可以理解为一种在TCP协议之上构建的一个简单的协议">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/30eb32e6264411004636cd302dbf2417.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005211144878.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005211209403.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201010191830990.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005211234753.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/310023e5f06d290091c44f6aee82b466.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201004230819656.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/ae5e9c7bee9e43cac7eb7d53856c56f9.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005154235475.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005160615133.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020100516085385.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/c8d5b11876f77cc201409d3071423c58.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201005231503783.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/dcdc61ed5f5b335d1e5bf3747d5a420a.png">
+<meta property="article:published_time" content="2022-10-10T02:10:16.000Z">
+<meta property="article:modified_time" content="2022-04-13T07:01:38.745Z">
+<meta property="article:author" content="Laoshiren">
+<meta property="article:tag" content="SpringBoot">
+<meta property="article:tag" content="mq">
+<meta property="article:tag" content="rabbitmq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/img_convert/30eb32e6264411004636cd302dbf2417.png">
+
+<link rel="canonical" href="https://laoshiren1207.github.io/2022/10/10/RabbitMq/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列 【RabbitMQ】 | LaoShiRen1207</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">LaoShiRen1207</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天下有太多难学的技术</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://laoshiren1207.github.io/2022/10/10/RabbitMq/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Laoshiren">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LaoShiRen1207">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列 【RabbitMQ】
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-10 10:10:16" itemprop="dateCreated datePublished" datetime="2022-10-10T10:10:16+08:00">2022-10-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-13 15:01:38" itemprop="dateModified" datetime="2022-04-13T15:01:38+08:00">2022-04-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MessageQueue/" itemprop="url" rel="index"><span itemprop="name">MessageQueue</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">消息队列可以理解为一种在TCP协议之上构建的一个简单的协议 <!--more--></div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1  前言"></a>1  前言</h2><h3 id="1-1-什么是MQ"><a href="#1-1-什么是MQ" class="headerlink" title="1.1  什么是MQ?"></a>1.1  什么是MQ?</h3><p><code>MQ (Message Queue)</code>：翻译为<strong>消息队列</strong>，消息队列可以理解为一种在<code>TCP</code>协议之上构建的一个<strong>简单的协议</strong>，但它又不是具体的通信协议，而是更高层次的 <strong>通信模型</strong> 即 <strong>生产者</strong> &#x2F; <strong>消费者</strong>模型，通过定义自己的生产者和消费者实现消息通信从而屏蔽复杂的底层通信协议；它为分布式应用系统提供异步解耦和削峰填谷的能力，同时也具备互联网应用所需的海量消息堆积、高吞吐、可靠重试等特性。</p>
+<blockquote>
+<p>… <code>MQ</code>是异步的，解耦用的，但是这个是<code>MQ</code>的效果而不是目的。<code>MQ</code>的真正目的是为了通讯，屏蔽底层复杂的通讯协议，定义了一套应用层更加简单的通讯协议。…</p>
+</blockquote>
+<p>消息队列采用 <code>FIFO</code> 的方式，即 先进先出 的数据结构。</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/30eb32e6264411004636cd302dbf2417.png"></p>
+<h3 id="1-2-消息队列类型"><a href="#1-2-消息队列类型" class="headerlink" title="1.2 消息队列类型"></a>1.2 消息队列类型</h3><p>一般分为有<code>Broker</code>和没有<code>Broker</code>，然而主流的<code>MQ</code>都是有<code>Broker</code>的，通常有一台服务器作为<code>Broker</code>，所有的消息都通过它中转。生产者把消息发送给它就结束自己的任务了，<code>Broker</code>则把消息主动推送给消费者（或者消费者主动轮询）。然而此文章就简单的写一下有<code>Broker</code>的<code>RabbitMQ</code>的玩法。</p>
+<h3 id="1-3-Topic"><a href="#1-3-Topic" class="headerlink" title="1.3 Topic"></a>1.3 Topic</h3><p>生产者会发送<code>key</code>和数据到<code>Broker</code>，由<code>Broker</code>比较<code>key</code>之后决定给哪个消费者。而<code>Rabbit MQ</code>是轻<code>topic</code>的代表，由<code>Broker</code>计算出<code>Key</code>对应的队列然后把数据交给队列。</p>
+<h2 id="2-RabbitMQ-的安装"><a href="#2-RabbitMQ-的安装" class="headerlink" title="2  RabbitMQ 的安装"></a>2  RabbitMQ 的安装</h2><p><code>docker</code>的安装方式</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3.1&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">rabbitmq:</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">rabbitmq:management</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">rabbitmq</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">5672</span><span class="string">:5672</span>  <span class="comment"># rabbitmq 的端口</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">15672</span><span class="string">:15672</span>  <span class="comment"># web UI   的端口</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">TZ:</span> <span class="string">Asia/Shanghai</span></span><br><span class="line">      <span class="attr">RABBITMQ_DEFAULT_USER:</span> <span class="string">root</span></span><br><span class="line">      <span class="attr">RABBITMQ_DEFAULT_PASS:</span> <span class="number">123456</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./data:/var/lib/rabbitmq</span></span><br></pre></td></tr></table></figure>
+
+<p>启动<code>docker-compose up -d</code>，访问<code>ip:15672</code> 账号密码如<code>yaml</code>配置</p>
+<h3 id="2-1-web管理界面"><a href="#2-1-web管理界面" class="headerlink" title="2.1 web管理界面"></a>2.1 web管理界面</h3><p><img src="https://img-blog.csdnimg.cn/20201005211144878.png"></p>
+<h2 id="3-RabbitMQ-的使用"><a href="#3-RabbitMQ-的使用" class="headerlink" title="3 RabbitMQ 的使用"></a>3 RabbitMQ 的使用</h2><p><img src="https://img-blog.csdnimg.cn/20201005211209403.png"></p>
+<h3 id="3-1-直连模式-hello-world"><a href="#3-1-直连模式-hello-world" class="headerlink" title="3.1 直连模式 hello-world"></a>3.1 直连模式 hello-world</h3><p><img src="https://img-blog.csdnimg.cn/20201010191830990.png" alt="在这里插入图片描述"></p>
+<p>项目采用的是<code>spring-boot-2.1.7RELEASE</code>版本，其对应的<code>rabbit-amqp-client</code>的版本是<code>&lt;rabbit-amqp-client.version&gt;5.4.3&lt;/rabbit-amqp-client.version&gt;</code>。而<code>rabbitmq</code>官网上说现在的<code>RELEASE</code>版本是5.9.0。</p>
+<p><img src="https://img-blog.csdnimg.cn/20201005211234753.png"></p>
+<p>需要手动修改一下版本，不过以此项目不能直接在<code>dependencies</code>项目修改，需要在具体项目里进行修改<code>pom.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rabbit-amqp-client.version</span>&gt;</span>5.9.0<span class="tag">&lt;/<span class="name">rabbit-amqp-client.version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="provider"><a href="#provider" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 链接MQ工厂</span></span><br><span class="line"><span class="type">ConnectionFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConnectionFactory</span>();</span><br><span class="line"><span class="comment">// 设置连接主机</span></span><br><span class="line">factory.setHost(<span class="string">&quot;120.79.0.210&quot;</span>);</span><br><span class="line">factory.setPort(<span class="number">5672</span>);</span><br><span class="line"><span class="comment">// 设置虚拟主机，</span></span><br><span class="line">factory.setVirtualHost(<span class="string">&quot;/&quot;</span>);</span><br><span class="line">factory.setUsername(<span class="string">&quot;rabbit&quot;</span>);</span><br><span class="line">factory.setPassword(<span class="string">&quot;123456&quot;</span>);</span><br><span class="line"><span class="comment">// 获取连接</span></span><br><span class="line"><span class="type">Connection</span> <span class="variable">connection</span> <span class="operator">=</span> factory.newConnection();</span><br><span class="line"><span class="comment">// 获取通道 channel</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// chanel 绑定消息队列</span></span><br><span class="line"><span class="comment">// 1. queue 队列名字，队列不存在自动创建</span></span><br><span class="line"><span class="comment">// 2. durable 队列是否持久化 true 表示持久化</span></span><br><span class="line"><span class="comment">// 3. exclusive 是否独占</span></span><br><span class="line"><span class="comment">// 4. autoDelete 是否在消费完成之后自动删除队列</span></span><br><span class="line"><span class="comment">// 5. 额外参数</span></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;amqp-hello-queue&quot;</span>,<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">false</span>,<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">Map&lt;String,Object&gt; objectMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">objectMap.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;value&quot;</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span> objectMapper.writeValueAsString(objectMap);</span><br><span class="line"><span class="comment">// 发布消息</span></span><br><span class="line"><span class="comment">// 1.交换机名称，没有传递空字符串</span></span><br><span class="line"><span class="comment">// 2.指定队列</span></span><br><span class="line"><span class="comment">// 3.传递参数 MessageProperties.PERSISTENT_TEXT_PLAIN 表示持久化消息</span></span><br><span class="line"><span class="comment">// 4.消息对象</span></span><br><span class="line">channel.basicPublish(<span class="string">&quot;&quot;</span>,<span class="string">&quot;amqp-hello-queue&quot;</span>,MessageProperties.PERSISTENT_TEXT_PLAIN,json.getBytes());</span><br><span class="line"><span class="comment">// 关闭通道</span></span><br><span class="line">channel.close();</span><br><span class="line"><span class="comment">// 关闭连接</span></span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer"><a href="#consumer" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建新连接</span></span><br><span class="line"><span class="type">Connection</span> <span class="variable">connection</span> <span class="operator">=</span> factory.newConnection();</span><br><span class="line"><span class="comment">// 创建通道</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 必须和发送端一致，不然就会新建一个channel</span></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;amqp-hello-queue&quot;</span>,<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">false</span>,<span class="literal">null</span>);</span><br><span class="line"><span class="comment">// 1 待消费的队列名称</span></span><br><span class="line"><span class="comment">// 2 开始消息的自动确认机制</span></span><br><span class="line"><span class="comment">// 3 消费的回调接口</span></span><br><span class="line">channel.basicConsume(<span class="string">&quot;amqp-hello-queue&quot;</span>,<span class="literal">true</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel) &#123;</span><br><span class="line">    <span class="comment">// body 表示消息队列取出的消息体</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="type">byte</span>[] body)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span>  <span class="keyword">new</span> <span class="title class_">String</span>(body);</span><br><span class="line">        System.out.println(json);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-任务模式-work-queues"><a href="#3-2-任务模式-work-queues" class="headerlink" title="3.2 任务模式 work-queues"></a>3.2 任务模式 work-queues</h3><p><code>Work Queues</code>任务模型也被称为<code>Task Queues</code>。当消息处理比较耗时的时候，可能产生的消息的速度远大于消耗消息的速度。长此以往消息就会堆积越来越多无法处理，此时就可以用<code>work</code>模型：<strong>让多个消费者绑定一个队列，共同消费队列中的消息</strong> 。队列中的消息一旦被消费就会消失，因此任务是并不会被重复执行的。</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/310023e5f06d290091c44f6aee82b466.png"></p>
+<h4 id="provider-1"><a href="#provider-1" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 定义队列</span></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;amqp-work-queue&quot;</span>,<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">false</span>,<span class="literal">null</span>);</span><br><span class="line"><span class="comment">// 生产多个消息</span></span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">200</span> ; i++) &#123;</span><br><span class="line">    Map&lt;String,Object&gt; objectMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    objectMap.put(<span class="string">&quot;key &quot;</span>+i,<span class="string">&quot;value &quot;</span>+i);</span><br><span class="line">    <span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(objectMap);</span><br><span class="line">    channel.basicPublish(<span class="string">&quot;&quot;</span>,<span class="string">&quot;amqp-work-queue&quot;</span>,<span class="literal">null</span>,jsonStr.getBytes());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-1"><a href="#consumer-1" class="headerlink" title="consumer"></a>consumer</h4><p><code>rabbitmq</code>在<code>work</code>模式默认是顺序的将消息发给消费者，平均每个消费者消费消息的数量是一致的。<strong>处理速度不一致也会导致消息堆积。</strong></p>
+<p><strong>能者多劳</strong>：消息确认机制</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第二个参数 表示消息自动确认 autoAck</span></span><br><span class="line">channel.basicConsume(<span class="string">&quot;amqp-work-queue&quot;</span>,<span class="literal">true</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel) &#123;</span><br><span class="line">      <span class="comment">// body 表示消息队列取出的消息体</span></span><br><span class="line">      <span class="meta">@SneakyThrows</span></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="type">byte</span>[] body)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">          Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">          System.out.println(<span class="string">&quot;slow-consumer-1&quot;</span>);</span><br><span class="line">          <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span>  <span class="keyword">new</span> <span class="title class_">String</span>(body);</span><br><span class="line">          System.out.println(json);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>消费者获取100个消息，当消费到第3个的时候消费者下线了，消息就会丢失98个。所以就需要设置<code>autoAck</code>设置为<code>false</code>。</p>
+<p><code>Unacked</code>表示未被确认的消息</p>
+<p><img src="https://img-blog.csdnimg.cn/20201004230819656.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 一次只消费一个消息</span></span><br><span class="line">channel.basicQos(<span class="number">1</span>);</span><br><span class="line"><span class="comment">// 必须和发送端一直，不然就会新建一个channel</span></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;amqp-work-queue&quot;</span>,<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">false</span>,<span class="literal">null</span>);</span><br><span class="line"><span class="comment">// 1 待消费的队列名称</span></span><br><span class="line"><span class="comment">// 2 开始消息的自动确认机制 true 表示自动确认 </span></span><br><span class="line"><span class="comment">// 3 消费的回调接口</span></span><br><span class="line">channel.basicConsume(<span class="string">&quot;amqp-work-queue&quot;</span>,<span class="literal">false</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel) &#123;</span><br><span class="line">    <span class="comment">// body 表示消息队列取出的消息体</span></span><br><span class="line">    <span class="meta">@SneakyThrows</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="type">byte</span>[] body)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;slow-consumer-1&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span>  <span class="keyword">new</span> <span class="title class_">String</span>(body);</span><br><span class="line">        System.out.println(json);</span><br><span class="line">        <span class="comment">// 手动确认消息</span></span><br><span class="line">        <span class="comment">// 1 确认队列中具体消息</span></span><br><span class="line">        <span class="comment">// 2 是否开启多个消息同时确认</span></span><br><span class="line">        channel.basicAck(envelope.getDeliveryTag(),<span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-发布订阅模式-publish-subscribe"><a href="#3-3-发布订阅模式-publish-subscribe" class="headerlink" title="3.3 发布订阅模式 publish-subscribe"></a>3.3 发布订阅模式 publish-subscribe</h3><p><code>fanout</code>也被称为广播模式，在广播模式下，<strong>每个消费者有自己的队列，每个队列都必须绑定到交换机上</strong>（图中的<code>x</code>）。<strong>生产者发送消息只能发送给交换机</strong>，交换机来决定给某个队列，生产者无法决定。交换机将消息发送给绑定上的队列，所有消费者都能拿到消息，<strong>实现一条消息被多个消费者消费</strong>。</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/ae5e9c7bee9e43cac7eb7d53856c56f9.png"></p>
+<h4 id="provider-2"><a href="#provider-2" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 将通道声明指定的交换机</span></span><br><span class="line"><span class="comment">// 1 交换机的名称</span></span><br><span class="line"><span class="comment">// 2 交换机的类型 fanout 表示广播类型</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;fanout-Ex&quot;</span>,<span class="string">&quot;fanout&quot;</span>);</span><br><span class="line"><span class="comment">// 发送消息</span></span><br><span class="line">Map&lt;String,Object&gt; objectMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">objectMap.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;fanout&quot;</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span> objectMapper.writeValueAsString(objectMap);</span><br><span class="line"><span class="comment">// 1 交换机名称</span></span><br><span class="line"><span class="comment">// 2 路由key,广播模式无须关心路由key</span></span><br><span class="line"><span class="comment">// 3 消息额外参数（持久化）</span></span><br><span class="line"><span class="comment">// 4 消息体</span></span><br><span class="line">channel.basicPublish(<span class="string">&quot;fanout-Ex&quot;</span>,<span class="string">&quot;&quot;</span>,<span class="literal">null</span>,json.getBytes());</span><br><span class="line">channel.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20201005154235475.png"></p>
+<h4 id="consumer-2"><a href="#consumer-2" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 绑定交换机</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;fanout-Ex&quot;</span>,<span class="string">&quot;fanout&quot;</span>,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">// 临时队列名</span></span><br><span class="line"><span class="type">String</span> <span class="variable">queueName</span> <span class="operator">=</span> channel.queueDeclare().getQueue();</span><br><span class="line"><span class="comment">// 绑定队列和交换机</span></span><br><span class="line">channel.queueBind(queueName,<span class="string">&quot;fanout-Ex&quot;</span>,<span class="string">&quot;&quot;</span>);</span><br><span class="line"><span class="comment">// 消费消息</span></span><br><span class="line">channel.basicConsume(queueName,<span class="literal">true</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel) &#123;</span><br><span class="line">    <span class="comment">// body 表示消息队列取出的消息体</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="type">byte</span>[] body)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        System.out.print(<span class="string">&quot;fanout-consumer-1 &quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span>  <span class="keyword">new</span> <span class="title class_">String</span>(body);</span><br><span class="line">        System.out.println(json);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20201005160615133.png"></p>
+<p>开启2个消费者，交换机收到一条消息会被2个消费者消费。</p>
+<p><img src="https://img-blog.csdnimg.cn/2020100516085385.png"></p>
+<h3 id="3-4-路由模式-routing"><a href="#3-4-路由模式-routing" class="headerlink" title="3.4 路由模式 routing"></a>3.4 路由模式 routing</h3><h4 id="路由直连-Direct"><a href="#路由直连-Direct" class="headerlink" title="路由直连 Direct"></a>路由直连 Direct</h4><p>在<code>fanout</code>模型中，一条消息会被所有订阅的队列消费。但是在某些场景下，我们希望不同的消息被不同的消息队列消费。这是就要用到<code>Direct</code>类型的<code>Exchange</code>。队列和交换机绑定，<strong>必须指定一个</strong><code>RoutingKey</code>。消息的发送方在向<code>Exchange</code>发送消息的同时。<strong>必须指定消息的</strong><code>RoutingKey</code>。<code>Exchange</code>不在把消息交给每一个绑定的队列，而是根据消息的<code>RoutingKey</code>进行判断，只有消息的<code>RoutingKey</code>与队列的<code>RoutingKey</code>完全一致才会接收到消息。</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/c8d5b11876f77cc201409d3071423c58.png"></p>
+<h4 id="provider-3"><a href="#provider-3" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取通道</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 设置交换机</span></span><br><span class="line"><span class="comment">// BuiltinExchangeType.DIRECT 直连</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;routing-direct-ex&quot;</span>, BuiltinExchangeType.DIRECT,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">// 声明路由Key</span></span><br><span class="line"><span class="type">String</span> <span class="variable">routingKey</span> <span class="operator">=</span> <span class="string">&quot;routing Key 1&quot;</span>;</span><br><span class="line"><span class="comment">// 消息对象</span></span><br><span class="line">Map&lt;String,Object&gt; objectMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">objectMap.put(<span class="string">&quot;key&quot;</span>,routingKey);</span><br><span class="line">objectMap.put(<span class="string">&quot;value&quot;</span>,<span class="string">&quot;routing -- direct&quot;</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(objectMap);</span><br><span class="line"><span class="comment">// 消息生产者 指定路由Key</span></span><br><span class="line">channel.basicPublish(<span class="string">&quot;routing-direct-ex&quot;</span>,routingKey,<span class="literal">null</span>,jsonStr.getBytes());</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-3"><a href="#consumer-3" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取通道</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 设置交换机</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;routing-direct-ex&quot;</span>, BuiltinExchangeType.DIRECT,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">// 路由key</span></span><br><span class="line"><span class="type">String</span> <span class="variable">routingKey1</span> <span class="operator">=</span> <span class="string">&quot;routing Key 1&quot;</span>;</span><br><span class="line"><span class="type">String</span> <span class="variable">routingKey2</span> <span class="operator">=</span> <span class="string">&quot;routing Key 2&quot;</span>;</span><br><span class="line"><span class="comment">// 临时队列名</span></span><br><span class="line"><span class="type">String</span> <span class="variable">queueName</span> <span class="operator">=</span> channel.queueDeclare().getQueue();</span><br><span class="line"><span class="comment">// 绑定队列，使用路由key 一个channel 绑定2个队列</span></span><br><span class="line">channel.queueBind(queueName,<span class="string">&quot;routing-direct-ex&quot;</span>,routingKey1,<span class="literal">null</span>);</span><br><span class="line">channel.queueBind(queueName,<span class="string">&quot;routing-direct-ex&quot;</span>,routingKey2,<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">channel.basicConsume(queueName,<span class="literal">true</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag,</span></span><br><span class="line"><span class="params">                               Envelope envelope,</span></span><br><span class="line"><span class="params">                               AMQP.BasicProperties properties,</span></span><br><span class="line"><span class="params">                               <span class="type">byte</span>[] body)</span><span class="keyword">throws</span> IOException&#123;</span><br><span class="line">        System.out.print(<span class="string">&quot;consumer :  &quot;</span>+ envelope.getRoutingKey());</span><br><span class="line">        <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span>  <span class="keyword">new</span> <span class="title class_">String</span>(body);</span><br><span class="line">        System.out.println(json);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>一个<code>channel</code>绑定多个队列，就类似上图的<code>C2</code>，不仅仅可以消费<code>info</code>，还可以消费<code>error</code>和<code>warning</code>的消息。</p>
+<p><img src="https://img-blog.csdnimg.cn/20201005231503783.png"></p>
+<h3 id="3-5-动态路由-topic"><a href="#3-5-动态路由-topic" class="headerlink" title="3.5 动态路由 topic"></a>3.5 动态路由 topic</h3><p><code>topic</code>模式又称为动态路由，他是基于路由的基础之上演化来的。代替使用仅能进行虚拟广播的<code>fanout</code>交换机，我们使用<code>direct</code>交换机，并有选择地接收消息。但是它仍然存在局限性-它不能基于多个条件进行路由。<code>Topic</code>类型的<code>Exchange</code>可以让队列在绑定<code>RoutingKey</code>的使用使用通配符。这种一般都是由一个或者多个单词组成，多个单词以<code>.</code>的形式分隔。</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/dcdc61ed5f5b335d1e5bf3747d5a420a.png"></p>
+<ul>
+<li>*（星号）可以代替一个单词。</li>
+<li>＃（哈希）可以替代零个或多个单词。</li>
+</ul>
+<h4 id="provider-4"><a href="#provider-4" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Connection</span> <span class="variable">connection</span> <span class="operator">=</span> RabbitUtils.openConnection();</span><br><span class="line"><span class="comment">// 获取通道</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="type">String</span> <span class="variable">exchangeName</span> <span class="operator">=</span> <span class="string">&quot;topic-ex&quot;</span>;</span><br><span class="line"><span class="comment">// 声明一个topic类型的交换机</span></span><br><span class="line">channel.exchangeDeclare(exchangeName, BuiltinExchangeType.TOPIC,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">// 声明消息体</span></span><br><span class="line"><span class="type">String</span> <span class="variable">routingKey</span> <span class="operator">=</span> <span class="string">&quot;rabbit.laoshiren.topic&quot;</span>;</span><br><span class="line">Map&lt;String,Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;routing key&quot;</span>,routingKey);</span><br><span class="line">map.put(<span class="string">&quot;exchange&quot;</span>, exchangeName);</span><br><span class="line"><span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(map);</span><br><span class="line"><span class="comment">// 向topic交换机发送消息</span></span><br><span class="line">channel.basicPublish(exchangeName,routingKey,<span class="literal">null</span>,jsonStr.getBytes());</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-4"><a href="#consumer-4" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明通道</span></span><br><span class="line"><span class="type">Channel</span> <span class="variable">channel</span> <span class="operator">=</span> connection.createChannel();</span><br><span class="line"><span class="comment">// 声明交换机</span></span><br><span class="line"><span class="type">String</span> <span class="variable">exchangeName</span> <span class="operator">=</span> <span class="string">&quot;topic-ex&quot;</span>;</span><br><span class="line">channel.exchangeDeclare(exchangeName, BuiltinExchangeType.TOPIC,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">// 声明队列并绑定</span></span><br><span class="line"><span class="type">String</span> <span class="variable">queueName</span> <span class="operator">=</span> channel.queueDeclare().getQueue();</span><br><span class="line">channel.queueBind(queueName,exchangeName,<span class="string">&quot;*.laoshiren.*&quot;</span>,<span class="literal">null</span>);</span><br><span class="line"><span class="comment">// 消费消息</span></span><br><span class="line">channel.basicConsume(queueName,<span class="literal">true</span>,<span class="keyword">new</span> <span class="title class_">DefaultConsumer</span>(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleDelivery</span><span class="params">(String consumerTag,</span></span><br><span class="line"><span class="params">                               Envelope envelope,</span></span><br><span class="line"><span class="params">                               AMQP.BasicProperties properties,</span></span><br><span class="line"><span class="params">                               <span class="type">byte</span>[] body)</span> <span class="keyword">throws</span> IOException</span><br><span class="line">    &#123;</span><br><span class="line">        System.out.print(<span class="string">&quot;topic-consumer1 &quot;</span>+ envelope.getExchange()+<span class="string">&quot; routing key &quot;</span>+envelope.getRoutingKey()+<span class="string">&quot; &quot;</span>);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> <span class="title class_">String</span>(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Topic exchange is powerful and can behave like other exchanges.</p>
+<p>Topic 类型的交换机是一个强大的可以像其他交换机一样功能的交换机</p>
+<p>When a queue is bound with “#” (hash) binding key - it will receive all the messages, regardless of the routing key - like in fanout exchange.</p>
+<p>当一个队列被<code>#</code>hash 绑定，他就会和<code>fanout</code>交换机一样，接收所有消息和<code>routing key</code>无关</p>
+<p>When special characters, “*” (star) and “#” (hash), aren’t used in bindings, the topic exchange will behave just like a direct one.</p>
+<p>当他不使用任何通配符，<code>topic</code>交换机又像<code>direct</code>交换机一样。</p>
+<p>​																																RabbitMQ 官网</p>
+</blockquote>
+<h2 id="4-Spring-AMQP"><a href="#4-Spring-AMQP" class="headerlink" title="4 Spring AMQP"></a>4 Spring AMQP</h2><h3 id="4-1-spring-hello-world"><a href="#4-1-spring-hello-world" class="headerlink" title="4.1 spring-hello-world"></a>4.1 spring-hello-world</h3><p>我们使用测试用例作为生产，<code>main</code>代码里作为消息消费者。第一步引入依赖。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rabbit-amqp-client.version</span>&gt;</span>5.9.0<span class="tag">&lt;/<span class="name">rabbit-amqp-client.version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- spring boot --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-test<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!-- rabbit-mq start --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-amqp<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="comment">## rabbit mq 基本设置</span></span><br><span class="line">  <span class="attr">rabbitmq:</span></span><br><span class="line">    <span class="attr">addresses:</span> <span class="number">120.79</span><span class="number">.0</span><span class="number">.210</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">5672</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">rabbit</span></span><br><span class="line">    <span class="attr">password:</span> <span class="number">123456</span></span><br><span class="line">    <span class="attr">virtual-host:</span> <span class="string">/</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="provider-5"><a href="#provider-5" class="headerlink" title="provider"></a>provider</h4><p>消息生产者<strong>不会主动创建队列</strong>，只有消费者才会创建队列。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Resource</span></span><br><span class="line"><span class="keyword">private</span> RabbitTemplate rabbitTemplate;</span><br><span class="line"><span class="meta">@Resource</span></span><br><span class="line"><span class="keyword">private</span> ObjectMapper objectMapper;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runEmpty</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">queueName</span> <span class="operator">=</span> <span class="string">&quot;amqp-spring-hello&quot;</span>;</span><br><span class="line">    Map&lt;String,Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;spring-hello-world&quot;</span>);</span><br><span class="line">    map.put(<span class="string">&quot;queueName&quot;</span>,queueName);</span><br><span class="line">    <span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(map);</span><br><span class="line">    <span class="comment">// 向队列发送消息 </span></span><br><span class="line">    <span class="comment">// 1 队列名</span></span><br><span class="line">    <span class="comment">// 2 消息体</span></span><br><span class="line">    rabbitTemplate.convertAndSend(queueName,jsonStr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-5"><a href="#consumer-5" class="headerlink" title="consumer"></a>consumer</h4><p>默认创建的就是持久化非独占的队列。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="comment">// 消费者监听</span></span><br><span class="line"><span class="comment">// queuesToDeclare 定义队列</span></span><br><span class="line"><span class="comment">// @Queue 队列</span></span><br><span class="line"><span class="comment">// 默认创建的就是 持久化非独占的队列</span></span><br><span class="line"><span class="meta">@RabbitListener(queuesToDeclare = &#123;@Queue(name = &quot;amqp-spring-hello&quot;,durable = &quot;true&quot;)&#125;)</span></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HelloWorldConsumer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 可以定义任意方法，但是只有一个方法能被@RabbitHandler修饰，不然就会报 no match 的异常</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 接收消息的方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@Annotation</span> <span class="doctag">@RabbitHandler</span> 表示mq消费者消费方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> message   消息体</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@RabbitHandler</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessage</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;queue: amqp-spring-hello  message &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-spring-work-queues"><a href="#4-2-spring-work-queues" class="headerlink" title="4.2 spring-work-queues"></a>4.2 spring-work-queues</h3><p>依赖和配置文件其实是和<code>spring-hello-world</code>一致的。</p>
+<h4 id="provider-6"><a href="#provider-6" class="headerlink" title="provider"></a>provider</h4><h4 id="consumer-6"><a href="#consumer-6" class="headerlink" title="consumer"></a>consumer</h4><p>模拟2个消费者消费</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WorkConsumer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(queuesToDeclare = &#123;@Queue(&quot;spring-work-queue&quot;)&#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageWork1</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;work1 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(queuesToDeclare = &#123;@Queue(&quot;spring-work-queue&quot;)&#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageWork2</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;work2 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出日志</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">2020-10-06 22:24:14.293  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:0,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.293  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:1,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.295  INFO 20066 --- [       Thread-2] o.s.a.r.l.SimpleMessageListenerContainer : Waiting for workers to finish.</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:2,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:3,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:4,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:5,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:6,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:7,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.296  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:8,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.297  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:9,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.297  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:10,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.297  INFO 20066 --- [ntContainer#1-1] c.l.h.r.s.work.consumer.WorkConsumer     : work2 &#123;&quot;value&quot;:11,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br><span class="line">2020-10-06 22:24:14.297  INFO 20066 --- [ntContainer#0-1] c.l.h.r.s.work.consumer.WorkConsumer     : work1 &#123;&quot;value&quot;:12,&quot;key&quot;:&quot;spring-work-queue&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>能者多劳模式</strong></p>
+<h3 id="4-3-spring-publish-subscribe"><a href="#4-3-spring-publish-subscribe" class="headerlink" title="4.3 spring-publish-subscribe"></a>4.3 spring-publish-subscribe</h3><p>依赖和配置文件其实是和<code>spring-hello-world</code>一致的。</p>
+<h4 id="provider-7"><a href="#provider-7" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runEmpty</span><span class="params">()</span> <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">exchangeName</span> <span class="operator">=</span> <span class="string">&quot;spring-fanout-ex&quot;</span>;</span><br><span class="line">    Map&lt;String,Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;spring-Publish-Subscribe&quot;</span>);</span><br><span class="line">    map.put(<span class="string">&quot;exchangeName&quot;</span>,exchangeName);</span><br><span class="line">    <span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(map);</span><br><span class="line">    <span class="comment">// 1 交换机名称</span></span><br><span class="line">    <span class="comment">// 2 路由key 发布订阅者 无须设置路由key</span></span><br><span class="line">    <span class="comment">// 3 消息体</span></span><br><span class="line">    rabbitTemplate.convertAndSend(exchangeName,<span class="string">&quot;&quot;</span>,jsonStr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-7"><a href="#consumer-7" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FanoutConsumer</span> &#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 此处声明多个消费者</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(</span></span><br><span class="line"><span class="meta">            // 绑定</span></span><br><span class="line"><span class="meta">            bindings = &#123;@QueueBinding(</span></span><br><span class="line"><span class="meta">                    // 创建临时队列</span></span><br><span class="line"><span class="meta">                    value = @Queue(&quot;&quot;),</span></span><br><span class="line"><span class="meta">                    // 配置交换机</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-fanout-ex&quot;,type = ExchangeTypes.FANOUT))</span></span><br><span class="line"><span class="meta">            &#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageFanout1</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;fanout1 -- &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(bindings = &#123;@QueueBinding(</span></span><br><span class="line"><span class="meta">                    value = @Queue(&quot;&quot;),</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-fanout-ex&quot;,type = ExchangeTypes.FANOUT))&#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageFanout2</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;fanout2 -- &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>日志输出</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2020-10-06 22:55:07.797  INFO 20911 --- [ntContainer#0-1] c.l.h.r.s.p.consumer.FanoutConsumer      : fanout1 -- &#123;&quot;exchangeName&quot;:&quot;spring-fanout-ex&quot;,&quot;key&quot;:&quot;spring-Publish-Subscribe&quot;&#125;</span><br><span class="line">2020-10-06 22:55:07.797  INFO 20911 --- [ntContainer#1-1] c.l.h.r.s.p.consumer.FanoutConsumer      : fanout2 -- &#123;&quot;exchangeName&quot;:&quot;spring-fanout-ex&quot;,&quot;key&quot;:&quot;spring-Publish-Subscribe&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-4-spring-routing"><a href="#4-4-spring-routing" class="headerlink" title="4.4 spring-routing"></a>4.4 spring-routing</h3><p>依赖和配置文件其实是和<code>spring-hello-world</code>一致的。</p>
+<h4 id="provider-8"><a href="#provider-8" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runEmpty</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">exchangeName</span> <span class="operator">=</span> <span class="string">&quot;spring-routing-ex&quot;</span>;</span><br><span class="line">    <span class="type">String</span> <span class="variable">routingKey</span> <span class="operator">=</span> <span class="string">&quot;laoshiren&quot;</span>;</span><br><span class="line">    <span class="comment">// String routingKey = &quot;rabbit&quot;;</span></span><br><span class="line">    Map&lt;String,Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;spring-routing&quot;</span>);</span><br><span class="line">    map.put(<span class="string">&quot;exchangeName&quot;</span>,exchangeName);</span><br><span class="line">    map.put(<span class="string">&quot;routingKey&quot;</span>,routingKey);</span><br><span class="line">    <span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(map);</span><br><span class="line">    <span class="comment">// 1. exchange 名</span></span><br><span class="line">    <span class="comment">// 2 routing 模式必须跟上路由key</span></span><br><span class="line">    <span class="comment">// 3 消息</span></span><br><span class="line">    rabbitTemplate.convertAndSend(exchangeName,routingKey,jsonStr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-8"><a href="#consumer-8" class="headerlink" title="consumer"></a>consumer</h4><p>第一个消费者只绑定一个<code>routingKey</code>，第二个消费者绑定多个<code>routingKey</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RoutingConsumer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(bindings = &#123;</span></span><br><span class="line"><span class="meta">            @QueueBinding(</span></span><br><span class="line"><span class="meta">                    // 临时队列</span></span><br><span class="line"><span class="meta">                    value = @Queue(),</span></span><br><span class="line"><span class="meta">                    // 交换机 type 默认就是direct直连模式</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-routing-ex&quot;,type = ExchangeTypes.DIRECT),</span></span><br><span class="line"><span class="meta">                    // 路由Key,可以声明多个</span></span><br><span class="line"><span class="meta">                    key = &#123;&quot;laoshiren&quot;&#125;</span></span><br><span class="line"><span class="meta">            )</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageRouting1</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;routing 1 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(bindings = &#123;</span></span><br><span class="line"><span class="meta">            @QueueBinding(</span></span><br><span class="line"><span class="meta">                    value = @Queue(),</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-routing-ex&quot;,type = ExchangeTypes.DIRECT),</span></span><br><span class="line"><span class="meta">                    key = &#123;&quot;laoshiren&quot;,&quot;rabbit&quot;&#125;</span></span><br><span class="line"><span class="meta">            )</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageRouting2</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;routing 2 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>日志输出</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 当路由key 为 laoshiren 时</span></span></span><br><span class="line">2020-10-06 23:19:44.920  INFO 21637 --- [ntContainer#1-1] c.l.h.r.s.r.consumer.RoutingConsumer     : routing 2 &#123;&quot;exchangeName&quot;:&quot;spring-routing-ex&quot;,&quot;key&quot;:&quot;spring-routing&quot;,&quot;routingKey&quot;:&quot;laoshiren&quot;&#125;</span><br><span class="line">2020-10-06 23:19:44.920  INFO 21637 --- [ntContainer#0-1] c.l.h.r.s.r.consumer.RoutingConsumer     : routing 1 &#123;&quot;exchangeName&quot;:&quot;spring-routing-ex&quot;,&quot;key&quot;:&quot;spring-routing&quot;,&quot;routingKey&quot;:&quot;laoshiren&quot;&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 当路由key 为 rabbit 时</span></span></span><br><span class="line">2020-10-06 23:23:37.319  INFO 21725 --- [ntContainer#1-1] c.l.h.r.s.r.consumer.RoutingConsumer     : routing 2 &#123;&quot;exchangeName&quot;:&quot;spring-routing-ex&quot;,&quot;key&quot;:&quot;spring-routing&quot;,&quot;routingKey&quot;:&quot;rabbit&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-5-spring-topic"><a href="#4-5-spring-topic" class="headerlink" title="4.5 spring-topic"></a>4.5 spring-topic</h3><p>依赖和配置文件其实是和<code>spring-hello-world</code>一致的。</p>
+<h4 id="provider-9"><a href="#provider-9" class="headerlink" title="provider"></a>provider</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runEmpty</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">exchangeName</span> <span class="operator">=</span> <span class="string">&quot;spring-topic-ex&quot;</span>;</span><br><span class="line">    <span class="type">String</span> <span class="variable">routingKey</span> <span class="operator">=</span> <span class="string">&quot;rabbit.laoshiren.1207&quot;</span>;</span><br><span class="line">    Map&lt;String,Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;key&quot;</span>,<span class="string">&quot;spring-topic&quot;</span>);</span><br><span class="line">    map.put(<span class="string">&quot;exchangeName&quot;</span>,exchangeName);</span><br><span class="line">    map.put(<span class="string">&quot;routingKey&quot;</span>,routingKey);</span><br><span class="line">    <span class="type">String</span> <span class="variable">jsonStr</span> <span class="operator">=</span> objectMapper.writeValueAsString(map);</span><br><span class="line">    <span class="comment">// 1. exchange 名</span></span><br><span class="line">    <span class="comment">// 2 routing 模式必须跟上路由key</span></span><br><span class="line">    <span class="comment">// 3 消息</span></span><br><span class="line">    rabbitTemplate.convertAndSend(exchangeName,routingKey,jsonStr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="consumer-9"><a href="#consumer-9" class="headerlink" title="consumer"></a>consumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TopicConsumer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(bindings = &#123;</span></span><br><span class="line"><span class="meta">            @QueueBinding(</span></span><br><span class="line"><span class="meta">                    value = @Queue(&quot;&quot;),</span></span><br><span class="line"><span class="meta">                    // 设置topic 类型的交换机</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-topic-ex&quot;,type = ExchangeTypes.TOPIC),</span></span><br><span class="line"><span class="meta">                    key = &#123;&quot;rabbit.#&quot;&#125;</span></span><br><span class="line"><span class="meta">            )</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageTopic1</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;topic 1 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener(bindings = &#123;</span></span><br><span class="line"><span class="meta">            @QueueBinding(</span></span><br><span class="line"><span class="meta">                    value = @Queue(&quot;&quot;),</span></span><br><span class="line"><span class="meta">                    exchange = @Exchange(name = &quot;spring-topic-ex&quot;,type = ExchangeTypes.TOPIC),</span></span><br><span class="line"><span class="meta">                    key = &#123;&quot;*.laoshiren.*&quot;,&quot;#.1207&quot;&#125;</span></span><br><span class="line"><span class="meta">            )</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">receiveMessageTopic2</span><span class="params">(String message)</span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;topic 2 &#123;&#125;&quot;</span>,message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>日志输出</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2020-10-06 23:47:45.579  INFO 22521 --- [ntContainer#0-1] c.l.h.r.s.topic.consumer.TopicConsumer   : topic 2 &#123;&quot;exchangeName&quot;:&quot;spring-topic-ex&quot;,&quot;key&quot;:&quot;spring-topic&quot;,&quot;routingKey&quot;:&quot;rabbit.laoshiren.1207&quot;&#125;</span><br><span class="line">2020-10-06 23:47:45.579  INFO 22521 --- [ntContainer#1-1] c.l.h.r.s.topic.consumer.TopicConsumer   : topic 1 &#123;&quot;exchangeName&quot;:&quot;spring-topic-ex&quot;,&quot;key&quot;:&quot;spring-topic&quot;,&quot;routingKey&quot;:&quot;rabbit.laoshiren.1207&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-应用场景"><a href="#5-应用场景" class="headerlink" title="5 应用场景"></a>5 应用场景</h2><h3 id="5-1-异步处理"><a href="#5-1-异步处理" class="headerlink" title="5.1 异步处理"></a>5.1 异步处理</h3><p>无须等待返回的可以交给<code>MQ</code>来处理，比如日志记录，短息邮件的发送，客户端无须关心事件完成的状态，引入消息队列，就是为了将不必要的业务逻辑从串行的方式分离出来。</p>
+<h3 id="5-2-应用解耦"><a href="#5-2-应用解耦" class="headerlink" title="5.2 应用解耦"></a>5.2 应用解耦</h3><p>传统的项目（特别是单体）业务与业务之间是高度耦合的，如今微服务或多或少解决了这个问题，而消息队列也可以帮助系统与系统之间的解耦。</p>
+<h3 id="5-3-削峰填谷"><a href="#5-3-削峰填谷" class="headerlink" title="5.3 削峰填谷"></a>5.3 削峰填谷</h3><p>在高并发的场景下，流量过大会导致单点故障，而引入消息队列，就可以解决突然高并发的场景。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+              <a href="/tags/mq/" rel="tag"># mq</a>
+              <a href="/tags/rabbitmq/" rel="tag"># rabbitmq</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/04/Mybatis/" rel="prev" title="Mybatis 原理以及池化技术原理">
+      <i class="fa fa-chevron-left"></i> Mybatis 原理以及池化技术原理
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">1  前言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E4%BB%80%E4%B9%88%E6%98%AFMQ"><span class="nav-number">1.1.</span> <span class="nav-text">1.1  什么是MQ?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 消息队列类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-Topic"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 Topic</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-RabbitMQ-%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">2  RabbitMQ 的安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-web%E7%AE%A1%E7%90%86%E7%95%8C%E9%9D%A2"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 web管理界面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-RabbitMQ-%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">3 RabbitMQ 的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E7%9B%B4%E8%BF%9E%E6%A8%A1%E5%BC%8F-hello-world"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 直连模式 hello-world</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider"><span class="nav-number">3.1.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer"><span class="nav-number">3.1.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E4%BB%BB%E5%8A%A1%E6%A8%A1%E5%BC%8F-work-queues"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 任务模式 work-queues</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-1"><span class="nav-number">3.2.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F-publish-subscribe"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 发布订阅模式 publish-subscribe</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-2"><span class="nav-number">3.3.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-2"><span class="nav-number">3.3.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E8%B7%AF%E7%94%B1%E6%A8%A1%E5%BC%8F-routing"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 路由模式 routing</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E7%9B%B4%E8%BF%9E-Direct"><span class="nav-number">3.4.1.</span> <span class="nav-text">路由直连 Direct</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-3"><span class="nav-number">3.4.2.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-3"><span class="nav-number">3.4.3.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1-topic"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 动态路由 topic</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-4"><span class="nav-number">3.5.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-4"><span class="nav-number">3.5.2.</span> <span class="nav-text">consumer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Spring-AMQP"><span class="nav-number">4.</span> <span class="nav-text">4 Spring AMQP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-spring-hello-world"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 spring-hello-world</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-5"><span class="nav-number">4.1.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-5"><span class="nav-number">4.1.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-spring-work-queues"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 spring-work-queues</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-6"><span class="nav-number">4.2.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-6"><span class="nav-number">4.2.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-spring-publish-subscribe"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 spring-publish-subscribe</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-7"><span class="nav-number">4.3.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-7"><span class="nav-number">4.3.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-spring-routing"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 spring-routing</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-8"><span class="nav-number">4.4.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-8"><span class="nav-number">4.4.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-spring-topic"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 spring-topic</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#provider-9"><span class="nav-number">4.5.1.</span> <span class="nav-text">provider</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer-9"><span class="nav-number">4.5.2.</span> <span class="nav-text">consumer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">5.</span> <span class="nav-text">5 应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%BC%82%E6%AD%A5%E5%A4%84%E7%90%86"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 异步处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E5%BA%94%E7%94%A8%E8%A7%A3%E8%80%A6"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 应用解耦</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E5%89%8A%E5%B3%B0%E5%A1%AB%E8%B0%B7"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 削峰填谷</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Laoshiren</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Laoshiren</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
