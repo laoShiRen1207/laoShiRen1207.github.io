@@ -175,7 +175,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/05/27/Redis/" class="post-title-link" itemprop="url">未命名</a>
+            <a href="/2022/05/27/Redis/" class="post-title-link" itemprop="url">Redis 配置文件详解等</a>
         </h2>
 
         <div class="post-meta">
@@ -186,7 +186,16 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-05-27 15:38:09 / 修改时间：15:26:09" itemprop="dateCreated datePublished" datetime="2022-05-27T15:38:09+08:00">2022-05-27</time>
+              <time title="创建时间：2022-05-27 15:38:48 / 修改时间：15:52:13" itemprop="dateCreated datePublished" datetime="2022-05-27T15:38:48+08:00">2022-05-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
             </span>
 
           
@@ -200,167 +209,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h1><h2 id="Redis-conf详情"><a href="#Redis-conf详情" class="headerlink" title="Redis.conf详情"></a>Redis.conf详情</h2><p>启动的时候，就通过配置文件来启动！</p>
-<blockquote>
-<p>单位不敏感</p>
-</blockquote>
-<p><img src="https://img-blog.csdnimg.cn/632e26706448434d96f9a728c95fa9c9.png" alt="在这里插入图片描述"></p>
-<blockquote>
-<p>可以包含其他配置文件</p>
-</blockquote>
-<p><img src="https://img-blog.csdnimg.cn/faf84af164b34534a8692252e2bc22e1.png" alt="在这里插入图片描述"></p>
-<blockquote>
-<p>NETWORK</p>
-</blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">bind</span> 127.0.0.1 <span class="comment"># 绑定的IP,只允许本机访问</span></span><br><span class="line">protected-mode <span class="built_in">yes</span> <span class="comment"># 保护模式</span></span><br><span class="line">port 6379		<span class="comment"># 端口</span></span><br><span class="line">tcp-backlog 511</span><br><span class="line"><span class="built_in">timeout</span> 0 		<span class="comment"># 客户端永不超时 单位秒</span></span><br><span class="line">tcp-keepalive 300 <span class="comment"># 客户端心跳检测300s 检查一次</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>GENERAL</p>
-</blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">daemonize <span class="built_in">yes</span> 	<span class="comment"># 是否以守护进程开启 默认是no</span></span><br><span class="line">pidfile /var/run/redis_6379.pid <span class="comment"># 在此文件中保存进程号</span></span><br><span class="line">loglevel notice	<span class="comment"># 日志级别</span></span><br><span class="line">logfile <span class="string">&quot;&quot;</span>		<span class="comment"># 日志文件默认为空</span></span><br><span class="line">databases 16 	<span class="comment"># 数据库</span></span><br><span class="line">always-show-logo <span class="built_in">yes</span> <span class="comment"># 显示logo</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>SNAPSHOT</p>
-</blockquote>
-<p>持久化，在规定的时间欸执行了多少次操作，怎会持久化到文件，.rdb .aof</p>
-<p>redis 是内存数据库，如果美欧持久化那么数据断电即失</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果 **秒内 有*个KEY进行更改就持久化</span></span><br><span class="line">save 900 1</span><br><span class="line">save 300 10</span><br><span class="line">save 60 10000</span><br><span class="line"></span><br><span class="line">stop-writes-on-bgsave-error <span class="built_in">yes</span> <span class="comment"># 持久化错误之后是否继续进行工作</span></span><br><span class="line">rdbcompression <span class="built_in">yes</span> 	<span class="comment"># 是否压缩rdb文件</span></span><br><span class="line">rdbchecksum	<span class="built_in">yes</span>		<span class="comment"># 保存rdb文件检查校验</span></span><br><span class="line">dbfilename dump.rdb</span><br><span class="line"><span class="built_in">dir</span> ./				<span class="comment"># 目录 当前文件夹下</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>SECURITY</p>
-</blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># requirepass  默认是没有密码的</span></span><br></pre></td></tr></table></figure>
-
-<p>通过命令设置密码</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment"># 默认没有</span></span><br><span class="line">config get requirepass</span><br><span class="line"><span class="comment"># 设置密码</span></span><br><span class="line">config <span class="built_in">set</span> requirepass <span class="string">&quot;123456&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 尝试去PING</span></span><br><span class="line">ping </span><br><span class="line">(error) NOAUTH Authentication required.</span><br><span class="line"><span class="comment"># 登录</span></span><br><span class="line">auth 123456</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>CLIENTS </p>
-</blockquote>
-<p>客户端限制</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">maxclients 10000 <span class="comment"># 最大连接数</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>MEMORY MANAGEMENT</p>
-</blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">maxmemory &lt;bytes&gt; <span class="comment"># 最大内存设置</span></span><br><span class="line">maxmermory-policy noeviction <span class="comment"># 内存到达最大的策略</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>volatile-lru: 之对设置了过期时间的key进行lru</li>
-<li>volatile-random: 随机删除过期的key</li>
-<li>volatile-ttl: 删除过期key</li>
-<li>allkeys-lru: 删除lru算法的key</li>
-<li>allkeys-random: 随机删除</li>
-<li>noeviction: 永不过期返回错误</li>
-</ul>
-<blockquote>
-<p>APPEND ONLY MODE</p>
-</blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">appendonly no <span class="comment"># 默认不开启</span></span><br><span class="line">appendfilename <span class="string">&quot;appendonly.aof&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 同步策略</span></span><br><span class="line"><span class="comment"># appendfsync always		# 每次修改都会写入</span></span><br><span class="line">appendfsync everysec 	<span class="comment"># 每秒同步一次</span></span><br><span class="line"><span class="comment"># appendfsync no			# 不同步</span></span><br><span class="line"></span><br><span class="line">no-appendfsync-on-rewrite no <span class="comment"># 重写</span></span><br><span class="line">auto-aof-rewrite-percentage 100</span><br><span class="line">auto-aofrewrite-min-size 64mb</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="REDIS-持久化"><a href="#REDIS-持久化" class="headerlink" title="REDIS 持久化"></a>REDIS 持久化</h2><h3 id="RDB"><a href="#RDB" class="headerlink" title="RDB"></a>RDB</h3><img src="https://img-blog.csdnimg.cn/49315dbc8dd249a5a565af2d3fe1c83a.png" alt="在这里插入图片描述" style="zoom: 33%;" />
-
-<p>在指定的时间间隔内，将内存中的数据集快照写入磁盘，也就是讲的SNAAPSHOT 快照，它恢复时是从快照文件直接读到内存里。</p>
-<p>Redis 会单独创建（fork）一个紫荆城来进行持久化，会先将数据写入到一个临时文件中。待持久化过程结束了，再用这个临时文件替换上次持久化好的文件。这个过程，主进程是不进行任何IO操作的，这就确保了极高的性能。如果需要进行大规模数据的回复，且对于数据恢复的完整性不是非常明干那RDB方式要比AOF方式更加高效。RDB的缺点就是最后一次数据持久化后的数据可能丢失。我们默认的就是RDB，一般情况下不需要修改这个配置！</p>
-<p>RDB保存的文件是dump.rdb，上文的配置文件已经说明。</p>
-<h4 id="触发机制"><a href="#触发机制" class="headerlink" title="触发机制"></a>触发机制</h4><ul>
-<li>save的规则满足的情况下</li>
-<li>执行<code>flushall </code>命令</li>
-<li>退出redis</li>
-</ul>
-<p>就会执行RDB，备份就会生成一个 x.rdb文件</p>
-<h4 id="恢复数据"><a href="#恢复数据" class="headerlink" title="恢复数据"></a>恢复数据</h4><p>只需要将rdb文件放在redis 启动目录下就可以，redis启动会自动检查 rdb文件恢复其中的数据</p>
-<p>查看需要存放的位置<code>config get dir</code></p>
-<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ul>
-<li>适合大规模的数据恢复</li>
-<li>如果对数据完整性不高</li>
-</ul>
-<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
-<li>需要一定的时间间隔，可能存在最后一次的数据丢失</li>
-<li>fork 进程占用内存空间。</li>
-</ul>
-<h3 id="AOF"><a href="#AOF" class="headerlink" title="AOF"></a>AOF</h3><p>将我们所有的命令都记录下来，恢复的时候就把这个文件全部执行一边</p>
-<p><img src="https://img-blog.csdnimg.cn/7bad4dd723714aad888d8133f9e01dbd.png" alt="在这里插入图片描述"></p>
-<p>以日志的形式记录每一个写操作，将Redis 执行过所有的指令记录下来，只许追加文件但不可以改写文件，Redis启动之初会读取该文件重新构造数据，换言之Redis 重启的话就更具日志文件的内容将写指令从前到后执行一次已完成数据的恢复工作</p>
-<p>AOF 保存的是 appendonly.aof文件，配置文件查看上文 <code>APPEND ONLY MODE</code></p>
-<img src="https://img-blog.csdnimg.cn/7cfccd001aea48eaa312559b856a0730.png" alt="在这里插入图片描述" style="zoom: 67%;" />
-
-<p>如果这个AOF文件有错误，这个时候redis 是启动不了的，需要修复这个aof 文件，redis 提供了一个工具<code>redis-check-aof --fix</code> 就会把错误的行删除。当aof 文件正常后，重启恢复数据。</p>
-<h4 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h4><ul>
-<li>每次修改都同步，文件完整性更加好</li>
-<li>默认开启每秒同步。</li>
-</ul>
-<h4 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h4><ul>
-<li>数据文件来说，AOF远远大于RDB，修复速度比RDB慢。</li>
-<li>AOF运行效率比RDB慢，默认的配置就是RDB的持久化。</li>
-</ul>
-<h2 id="REDIS-主从复制"><a href="#REDIS-主从复制" class="headerlink" title="REDIS 主从复制"></a>REDIS 主从复制</h2><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>主从复制，只是将一台Redis 服务器的数据，复制到其他Redis 服务器。前者称为主节点(master&#x2F;leader)，后者称为从节点(slave&#x2F;follower)。数据的复制是单向的，只能从主节点到从节点。Master 以写为主。Slave 以读为主。</p>
-<p>默认情况下，每台Redis 服务器都是主节点，且一个主节点可以有多个从节点(或没有从节点)，但是一个从节点只能有一个主节点。</p>
-<img src="https://img-blog.csdnimg.cn/3990501fff6246bb915f2d7938ff5e4a.png" alt="在这里插入图片描述" style="zoom:40%;" />
-
-<h3 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h3><p>包括：</p>
-<ol>
-<li>数据冗余：主从复制实现了数据的热备份，是持久化之外的数据冗余。</li>
-<li>故障恢复：当主节点出现问题，可以由从阶段提供服务，实现快速的故障恢复。</li>
-<li>LB：在主从复制的基础之上配合读写分离，可以由主节点提供服务，有从节点提供读服务（即写Redis 使用主节点，读Redis 使用从节点），分摊服务负载；尤其在写少读多的场景下，通过多个从阶段分摊读负担，可以大大提高Redis 服务器的并发量。</li>
-<li>高可用基石：除了上述作用外，主从赋值还是烧饼和集群能够实施的基础，因此说主从是Redis 高可用的基石。</li>
-</ol>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">info replication <span class="comment"># 查看信息</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Replication</span></span><br><span class="line">role:master				<span class="comment"># 角色 默认主机</span></span><br><span class="line">connected_slaves:0		<span class="comment"># 从机个数</span></span><br><span class="line">master_replid:cc087c50b1b69f791b1f0ab61ccb473453e098a9</span><br><span class="line">master_replid2:0000000000000000000000000000000000000000</span><br><span class="line">master_repl_offset:0</span><br><span class="line">second_repl_offset:-1</span><br><span class="line">repl_backlog_active:0</span><br><span class="line">repl_backlog_size:1048576</span><br><span class="line">repl_backlog_first_byte_offset:0</span><br><span class="line">repl_backlog_histlen:0</span><br></pre></td></tr></table></figure>
-
-<p>在从机上确认主机</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SLAVEOF 127.0.0.1 6379</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">info replication <span class="comment"># 查看信息 </span></span><br><span class="line"><span class="comment"># Replication</span></span><br><span class="line">role:slave</span><br><span class="line">master_host:127.0.0.1</span><br><span class="line">master_port:6379</span><br><span class="line">master_link_status:up</span><br><span class="line">master_last_io_seconds_ago:9</span><br><span class="line">master_sync_in_progress:0</span><br><span class="line">slave_repl_offset:56</span><br><span class="line">slave_priority:100</span><br><span class="line">slave_read_only:1</span><br><span class="line">connected_slaves:0</span><br><span class="line">master_replid:8f6073b6513dcb11071a51daae971c3020ca245c</span><br><span class="line">master_replid2:0000000000000000000000000000000000000000</span><br><span class="line">master_repl_offset:56</span><br><span class="line">second_repl_offset:-1</span><br><span class="line">repl_backlog_active:1</span><br><span class="line">repl_backlog_size:1048576</span><br><span class="line">repl_backlog_first_byte_offset:1</span><br><span class="line">repl_backlog_histlen:56</span><br></pre></td></tr></table></figure>
-
-<p>查看主机配置</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">info replication</span><br><span class="line"><span class="comment"># Replication</span></span><br><span class="line">role:master</span><br><span class="line">connected_slaves:2</span><br><span class="line">slave0:ip=127.0.0.1,port=6380,state=online,offset=238,lag=1</span><br><span class="line">slave1:ip=127.0.0.1,port=6381,state=online,offset=238,lag=0</span><br><span class="line">master_replid:8f6073b6513dcb11071a51daae971c3020ca245c</span><br><span class="line">master_replid2:0000000000000000000000000000000000000000</span><br><span class="line">master_repl_offset:238</span><br><span class="line">second_repl_offset:-1</span><br><span class="line">repl_backlog_active:1</span><br><span class="line">repl_backlog_size:1048576</span><br><span class="line">repl_backlog_first_byte_offset:1</span><br><span class="line">repl_backlog_histlen:238</span><br></pre></td></tr></table></figure>
-<p>如果主机断开了连接可以使用<code>SLAVEOF no one</code> 让自己成为主机</p>
-<blockquote>
-<p>REPLICATION</p>
-</blockquote>
-<p>&#x3D;&#x3D;真实的主从应该从配置文件配置主从，命令指示暂时的，如果是命令配置的主从，从机重启后就会变回主机&#x3D;&#x3D;</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">slaveof 12730.0.1 6379 <span class="comment"># 主节点信息</span></span><br><span class="line">masterauth 123456		<span class="comment"># 主节点密码 可能没有</span></span><br></pre></td></tr></table></figure>
-
-
-
-<blockquote>
-<p>复制原理</p>
-</blockquote>
-<p>Slave 启动成功链接到Master 后，会发送一个sync 同步命令</p>
-<p>Master 接到命令，启动后台的存盘进程，同时收集所有接收到用于修改数据命令，在后台进程执行完毕之后，Master 将传送整个数据文件到 Slave 并完成一次完全同步。</p>
-<p>全量复制：而slave 服务在接收到数据库文件数据后，将其存盘并且加载到内存中。</p>
-<p>增量复制：Master 继续将新的所有收集到的修改命令一次传给Slave ，完成同步。</p>
-<p>但是只要是重新连接Master 一次全量复制将被自动执行。</p>
-<p><img src="https://img-blog.csdnimg.cn/20210715021431438.png"></p>
-<h2 id="哨兵模式"><a href="#哨兵模式" class="headerlink" title="哨兵模式"></a>哨兵模式</h2><blockquote>
-<p>SENTINEL </p>
-</blockquote>
-<h3 id="概念-1"><a href="#概念-1" class="headerlink" title="概念"></a>概念</h3><p>主从切换技术的方法是：当服务器宕机后需要收到把一台服务器切换为主服务器，这就需要人工干预，还会造成一段时间的服务不可用。Redis 从2.8开始正式提供了Sentinel 架构来解决这个问题。</p>
-<p>他能够后台监控主机是否故障，如果故障根据投票自动将从库转换为主库。</p>
-<p>Sentinel 是一种特殊的模式，首先Redis 提供了哨兵命令，哨兵是一个独立进程。原理是哨兵通过发送命令，等待Redis 服务响应从而监控多个Redis 实例。</p>
-<img src="https://img-blog.csdnimg.cn/395863469b184ae899843e1e241bece1.png" alt="在这里插入图片描述" style="zoom: 50%;" />
-
-<p>通过发送命令，让Redis 服务器返回，监控其运行状态，包括主从服务器。当哨兵检测到Master 宕机，会自动将Slave 切换为Master ，然后通过发布订阅模式通知到其他从服务器，修改配置文件，让他们切换主机。</p>
-<blockquote>
-<p>然而一个哨兵可能也会出现问题，为此，可以使用多哨兵进行监控，各个哨兵还会彼此监控。</p>
-</blockquote>
-<img src="https://img-blog.csdnimg.cn/6a588b340c484164bfc3147a3827ff4a.png" alt="在这里插入图片描述" style="zoom:40%;" />
-
-<p>假设主服务器宕机，哨兵1检测到这个结果，系统不会马上failover (故障转移切换主节点)，仅仅是哨兵1认为这个主服务器不可用（主观下线），当其他哨兵也检测到主服务器不可用，并且数量到达一定值时。哨兵之间会进行一次投票，投票由一个哨兵发起，进行failover 。切换成功后就通过发布订阅模式，让哥哥哨兵把自己监控的从服务器实现切换主机（客观下线）</p>
-<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><blockquote>
-<p>配置 sentinel.conf</p>
-</blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># sentinel monitor 主机名称 ip port 1 表示主机挂了，投票让slave接替主机  </span><br><span class="line">sentinel monitor redis_master 127.0.0.1 6379 1 </span><br></pre></td></tr></table></figure>
-
-<p>启动哨兵<code>redis-sentinel redis-config/sentinel.conf</code></p>
-<h3 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h3><ul>
-<li>哨兵基于主从复制模式</li>
-<li>主从可以切换，故障转移，系统可用性会更好</li>
-</ul>
-<h3 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h3><ul>
-<li>Redis 不好扩容</li>
-<li>Sentinel 配置繁琐</li>
-</ul>
-
+          <p>分布式事务 Seata</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/05/27/Redis/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1212,13 +1069,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
